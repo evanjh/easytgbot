@@ -1,12 +1,15 @@
 package easytgbot
 
 import (
+	"fmt"
 	"testing"
 )
 
-func TestHello(t *testing.T) {
-	want := "Hello, world."
-	if got := Hello(); got != want {
-		t.Errorf("Hello() = %q, want %q", got, want)
+func TestNew(t *testing.T) {
+	bot, err := New("951886466:AAEhTr7--GVVIkEhVuWUZZqGNC1nxMBVQ7o")
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
+		return
 	}
+	fmt.Printf("bot: %+v\n", bot)
 }

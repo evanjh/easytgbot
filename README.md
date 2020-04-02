@@ -1,1 +1,1 @@
-# telegram-bot-api
+# EasyTGBot
