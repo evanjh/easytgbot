@@ -64,7 +64,7 @@ func TestDeleteWebhook(t *testing.T) {
 	}
 }
 
-func TestSetWebhookInfo(t *testing.T) {
+func TestSetWebhookWithCert(t *testing.T) {
 	bot, _ := getBot(t)
 	file, _ := os.Open("./ca.cert")
 	_, err := bot.SetWebhook(easytgbot.JSONBody{
@@ -79,6 +79,23 @@ func TestSetWebhookInfo(t *testing.T) {
 			File:      file,
 			FieldName: "certificate",
 			FileName:  "ca.cert",
+		},
+	})
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+}
+
+func TestSetWebhooks(t *testing.T) {
+	bot, _ := getBot(t)
+	_, err := bot.SetWebhook(easytgbot.JSONBody{
+		"url":             "https://test01.tg.atmy.work/",
+		"max_connections": 10,
+		"allowed_updates": []string{
+			"message",
+			"edited_channel_post",
+			"callback_query",
 		},
 	})
 	if err != nil {

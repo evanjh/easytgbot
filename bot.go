@@ -157,6 +157,8 @@ func (bot *BotAPI) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 	}
 	if bot.Debug {
 		log.Printf("%+v", resp)
+	} else {
+		log.Printf("%-v", resp)
 	}
 	data, _ := resp.ToString()
 	apiJSON := JSON{gjson.Parse(data)}
