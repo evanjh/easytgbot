@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,8 +19,6 @@ const (
 	// APIEndpoint is the endpoint for all API methods,
 	// with formatting for Sprintf.
 	APIEndpoint = "https://api.telegram.org/bot%s/%s"
-	// FileEndpoint is the endpoint for downloading a file from Telegram.
-	FileEndpoint = "https://api.telegram.org/file/bot%s/%s"
 )
 
 // JSONBody is send message
@@ -27,12 +26,14 @@ type JSONBody map[string]interface{}
 
 // BotAPI allows you to interact with the Telegram Bot API.
 type BotAPI struct {
-	Token string
-	Debug bool
+	Token  string
+	Debug  bool
+	Buffer int
 
-	Self    JSON
-	Client  *req.Req
-	Timeout time.Duration
+	Self            JSON
+	Client          *req.Req
+	shutdownChannel chan interface{}
+	Timeout         time.Duration
 
 	apiEndpoint string
 }
@@ -98,6 +99,7 @@ func NewBotAPIWith(token string, apiEndpoint string) (*BotAPI, error) {
 	bot := &BotAPI{
 		Token:       token,
 		Client:      client,
+		Buffer:      100,
 		Timeout:     10,
 		apiEndpoint: apiEndpoint,
 	}
@@ -195,6 +197,45 @@ func (bot *BotAPI) GetUpdates(params JSONBody) ([]JSON, error) {
 		return []JSON{}, err
 	}
 	return resp.Array(), nil
+}
+
+// UpdatesChannel is the channel for getting updates.
+type UpdatesChannel <-chan JSON
+
+// GetUpdatesChan starts and returns a channel for getting updates.
+func (bot *BotAPI) GetUpdatesChan(params JSONBody) (UpdatesChannel, error) {
+	ch := make(chan JSON, bot.Buffer)
+	offset, _ := strconv.ParseInt(strconv.Itoa(params["offset"].(int)), 10, 64)
+
+	go func() {
+		for {
+			select {
+			case <-bot.shutdownChannel:
+				close(ch)
+				return
+			default:
+			}
+
+			updates, err := bot.GetUpdates(params)
+			if err != nil {
+				log.Println(err)
+				log.Println("Failed to get updates, retrying in 3 seconds...")
+				time.Sleep(time.Second * 3)
+
+				continue
+			}
+
+			for _, update := range updates {
+				if update.Get("update_id").Int() >= offset {
+					params["offset"] = update.Get("update_id").Int() + 1
+					fmt.Printf("GetUpdatesChan: %T %+[1]v\n", params["offset"])
+					ch <- update
+				}
+			}
+		}
+	}()
+
+	return ch, nil
 }
 
 // GetWebhookInfo allows you to fetch information about a webhook and if

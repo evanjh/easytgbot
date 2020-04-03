@@ -55,6 +55,24 @@ func TestGetUpdates(t *testing.T) {
 	}
 }
 
+func TestUpdatesChan(t *testing.T) {
+	bot, _ := getBot(t)
+	bot.DeleteWebhook()
+	updates, err := bot.GetUpdatesChan(easytgbot.JSONBody{
+		"offset": 0,
+		"limit":  1,
+	})
+
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+
+	for update := range updates {
+		fmt.Printf("update: %T %+[1]v\n", update)
+	}
+}
+
 func TestDeleteWebhook(t *testing.T) {
 	bot, _ := getBot(t)
 	_, err := bot.DeleteWebhook()
@@ -91,10 +109,9 @@ func TestSetWebhooks(t *testing.T) {
 	bot, _ := getBot(t)
 	_, err := bot.SetWebhook(easytgbot.JSONBody{
 		"url":             "https://test01.tg.atmy.work/",
-		"max_connections": 10,
+		"max_connections": 100,
 		"allowed_updates": []string{
 			"message",
-			"edited_channel_post",
 			"callback_query",
 		},
 	})
