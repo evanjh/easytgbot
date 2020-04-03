@@ -3,6 +3,8 @@ package easytgbot
 import (
 	"fmt"
 	"log"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/imroc/req"
@@ -11,6 +13,8 @@ import (
 
 // Telegram constants
 const (
+	// UserAgent is http user-agent header
+	UserAgent = "EasyTGBot/1.0.0"
 	// APIEndpoint is the endpoint for all API methods,
 	// with formatting for Sprintf.
 	APIEndpoint = "https://api.telegram.org/bot%s/%s"
@@ -111,17 +115,48 @@ func NewBotAPIWith(token string, apiEndpoint string) (*BotAPI, error) {
 // MakeRequest makes a request to a specific endpoint with our token.
 func (bot *BotAPI) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 	method := fmt.Sprintf(bot.apiEndpoint, bot.Token, endpoint)
+	var jsonBody JSONBody
+	if params == nil {
+		jsonBody = JSONBody{}
+	} else {
+		jsonBody = params
+	}
+
 	// set timeout
 	bot.Client.SetTimeout(bot.Timeout * time.Second)
 	// post data
-	resp, err := bot.Client.Post(method, req.Header{
-		"User-Agent": "EasyTGBot",
-	}, req.BodyJSON(&params))
+	var (
+		resp *req.Resp
+		err  error
+	)
+
+	header := req.Header{
+		"User-Agent": UserAgent,
+	}
+
+	if endpoint == "setWebhook" {
+		var fileUploads []req.FileUpload
+		fromParams := url.Values{}
+		for key, value := range params {
+			switch value.(type) {
+			case string, int:
+				fromParams.Add(key, fmt.Sprintf("%v", value))
+			case []string:
+				fromParams.Add(key, fmt.Sprintf("[\"%v\"]", strings.Join(value.([]string), "\",\"")))
+			case req.FileUpload:
+				fileUploads = append(fileUploads, value.(req.FileUpload))
+			}
+		}
+		resp, err = bot.Client.Post(method, header, fromParams, fileUploads)
+	} else {
+		resp, err = bot.Client.Post(method, header, req.BodyJSON(&jsonBody))
+	}
+
 	if err != nil {
 		return JSON{}, err
 	}
 	if bot.Debug {
-		log.Printf("%-v", resp)
+		log.Printf("%+v", resp)
 	}
 	data, _ := resp.ToString()
 	apiJSON := JSON{gjson.Parse(data)}
@@ -147,11 +182,7 @@ func (bot *BotAPI) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 // and so you may get this data from BotAPI.Self without the need for
 // another request.
 func (bot *BotAPI) GetMe() (JSON, error) {
-	resp, err := bot.MakeRequest("getMe", nil)
-	if err != nil {
-		return JSON{}, err
-	}
-	return resp, nil
+	return bot.MakeRequest("getMe", nil)
 }
 
 // GetUpdates fetches updates.
@@ -162,4 +193,25 @@ func (bot *BotAPI) GetUpdates(params JSONBody) ([]JSON, error) {
 		return []JSON{}, err
 	}
 	return resp.Array(), nil
+}
+
+// GetWebhookInfo allows you to fetch information about a webhook and if
+// one currently is set, along with pending update count and error messages.
+func (bot *BotAPI) GetWebhookInfo() (JSON, error) {
+	return bot.MakeRequest("getWebhookInfo", nil)
+}
+
+// SetWebhook sets a webhook.
+//
+// If this is set, GetUpdates will not get any data!
+//
+// If you do not have a legitimate TLS certificate, you need to include
+// your self signed certificate with the config.
+func (bot *BotAPI) SetWebhook(params JSONBody) (JSON, error) {
+	return bot.MakeRequest("setWebhook", params)
+}
+
+// DeleteWebhook unsets the webhook.
+func (bot *BotAPI) DeleteWebhook() (JSON, error) {
+	return bot.MakeRequest("deleteWebhook", nil)
 }
