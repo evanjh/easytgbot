@@ -3,7 +3,7 @@ package easytgbot
 import (
 	"fmt"
 	"log"
-	"net/url"
+	"time"
 
 	"github.com/imroc/req"
 	"github.com/tidwall/gjson"
@@ -18,13 +18,17 @@ const (
 	FileEndpoint = "https://api.telegram.org/file/bot%s/%s"
 )
 
+// JSONBody is send message
+type JSONBody map[string]interface{}
+
 // BotAPI allows you to interact with the Telegram Bot API.
 type BotAPI struct {
 	Token string `json:"token"`
 	Debug bool   `json:"debug"`
 
-	Self   JSON     `json:"-"`
-	Client *req.Req `json:"-"`
+	Self    JSON          `json:"-"`
+	Client  *req.Req      `json:"-"`
+	Timeout time.Duration `json:"timeout"`
 
 	apiEndpoint string
 }
@@ -38,6 +42,33 @@ type JSON struct {
 // The result should be a JSON array or object.
 func (t JSON) Get(path string) JSON {
 	return JSON{gjson.Get(t.Raw, path)}
+}
+
+// Array returns back an array of values.
+// If the result represents a non-existent value, then an empty array will be
+// returned. If the result is not a JSON array, the return value will be an
+// array containing one result.
+func (t JSON) Array() []JSON {
+	res := []JSON{}
+	if t.IsArray() {
+		t.ForEach(func(key, value gjson.Result) bool {
+			res = append(res, JSON{value})
+			return true // keep iterating
+		})
+	}
+	return res
+}
+
+// Map returns back an map of values. The result should be a JSON array.
+func (t JSON) Map() map[string]JSON {
+	res := map[string]JSON{}
+	if t.IsObject() {
+		t.ForEach(func(key, value gjson.Result) bool {
+			res[key.String()] = JSON{value}
+			return true // keep iterating
+		})
+	}
+	return res
 }
 
 // Error is an error containing extra information returned by the Telegram API.
@@ -59,6 +90,7 @@ func New(token string) (*BotAPI, error) {
 // NewBotAPIWith creates a new BotAPI instance and allows you to pass API endpoint.
 func NewBotAPIWith(token string, apiEndpoint string) (*BotAPI, error) {
 	client := req.New()
+
 	bot := &BotAPI{
 		Token:       token,
 		Client:      client,
@@ -76,30 +108,33 @@ func NewBotAPIWith(token string, apiEndpoint string) (*BotAPI, error) {
 }
 
 // MakeRequest makes a request to a specific endpoint with our token.
-func (bot *BotAPI) MakeRequest(endpoint string, params url.Values) (JSON, error) {
+func (bot *BotAPI) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 	method := fmt.Sprintf(bot.apiEndpoint, bot.Token, endpoint)
-	resp, err := bot.Client.Get(method)
+	// set timeout
+	bot.Client.SetTimeout(bot.Timeout * time.Second)
+	// post data
+	resp, err := bot.Client.Post(method, req.Header{
+		"User-Agent": "EasyTGBot",
+	}, req.BodyJSON(&params))
 	if err != nil {
 		return JSON{}, err
 	}
-	data, err := resp.ToString()
-	fmt.Printf("data: %+v\n", data)
-	if err != nil {
-		log.Fatal(err)
+	if bot.Debug {
+		log.Printf("%+v", resp)
 	}
-
-	apiResp := JSON{gjson.Parse(data)}
-	ok := apiResp.Get("ok").Bool()
+	data, _ := resp.ToString()
+	apiJSON := JSON{gjson.Parse(data)}
+	ok := apiJSON.Get("ok").Bool()
 	if !ok {
 		// error
-		return apiResp, &Error{
-			Code:       apiResp.Get("error_code").Int(),
-			Message:    apiResp.Get("description").String(),
-			Parameters: apiResp.Get("parameters"),
+		return apiJSON, &Error{
+			Code:       apiJSON.Get("error_code").Int(),
+			Message:    apiJSON.Get("description").String(),
+			Parameters: apiJSON.Get("parameters"),
 		}
 	}
 
-	result := apiResp.Get("result")
+	result := apiJSON.Get("result")
 
 	return result, nil
 
@@ -116,4 +151,14 @@ func (bot *BotAPI) GetMe() (JSON, error) {
 		return JSON{}, err
 	}
 	return resp, nil
+}
+
+// GetUpdates fetches updates.
+// If a WebHook is set, this will not return any data!
+func (bot *BotAPI) GetUpdates(params JSONBody) ([]JSON, error) {
+	resp, err := bot.MakeRequest("getUpdates", params)
+	if err != nil {
+		return []JSON{}, err
+	}
+	return resp.Array(), nil
 }
