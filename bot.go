@@ -23,12 +23,12 @@ type JSONBody map[string]interface{}
 
 // BotAPI allows you to interact with the Telegram Bot API.
 type BotAPI struct {
-	Token string `json:"token"`
-	Debug bool   `json:"debug"`
+	Token string
+	Debug bool
 
-	Self    JSON          `json:"-"`
-	Client  *req.Req      `json:"-"`
-	Timeout time.Duration `json:"timeout"`
+	Self    JSON
+	Client  *req.Req
+	Timeout time.Duration
 
 	apiEndpoint string
 }
@@ -94,6 +94,7 @@ func NewBotAPIWith(token string, apiEndpoint string) (*BotAPI, error) {
 	bot := &BotAPI{
 		Token:       token,
 		Client:      client,
+		Timeout:     10,
 		apiEndpoint: apiEndpoint,
 	}
 
@@ -120,7 +121,7 @@ func (bot *BotAPI) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 		return JSON{}, err
 	}
 	if bot.Debug {
-		log.Printf("%+v", resp)
+		log.Printf("%-v", resp)
 	}
 	data, _ := resp.ToString()
 	apiJSON := JSON{gjson.Parse(data)}
