@@ -228,7 +228,6 @@ func (bot *BotAPI) GetUpdatesChan(params JSONBody) (UpdatesChannel, error) {
 			for _, update := range updates {
 				if update.Get("update_id").Int() >= offset {
 					params["offset"] = update.Get("update_id").Int() + 1
-					fmt.Printf("GetUpdatesChan: %T %+[1]v\n", params["offset"])
 					ch <- update
 				}
 			}
