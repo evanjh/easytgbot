@@ -53,6 +53,11 @@ func (t JSON) Get(path string) JSON {
 	return JSON{gjson.Get(t.Raw, path)}
 }
 
+// JSONParse parses the json and returns a result.
+func JSONParse(data string) JSON {
+	return JSON{gjson.Parse(data)}
+}
+
 // Array returns back an array of values.
 // If the result represents a non-existent value, then an empty array will be
 // returned. If the result is not a JSON array, the return value will be an
@@ -189,7 +194,7 @@ func (bot *BotAPI) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 		log.Printf("%-v", resp)
 	}
 	data, _ := resp.ToString()
-	apiJSON := JSON{gjson.Parse(data)}
+	apiJSON := JSONParse(data)
 	ok := apiJSON.Get("ok").Bool()
 	if !ok {
 		// error
