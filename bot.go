@@ -53,20 +53,6 @@ func (t JSON) Get(path string) JSON {
 	return JSON{gjson.Get(t.Raw, path)}
 }
 
-// Value returns one of these types:
-//
-//	bool, for JSON booleans
-//	float64, for JSON numbers
-//	Number, for JSON numbers
-//	string, for JSON string literals
-//	nil, for JSON null
-//	map[string]interface{}, for JSON objects
-//	[]interface{}, for JSON arrays
-//
-func (t JSON) Value() interface{} {
-	return t.Value()
-}
-
 // Array returns back an array of values.
 // If the result represents a non-existent value, then an empty array will be
 // returned. If the result is not a JSON array, the return value will be an
