@@ -36,7 +36,7 @@ type BotAPI struct {
 
 	Self            JSON
 	Client          *req.Req
-	Context         *JSON
+	Update          *JSON
 	shutdownChannel chan interface{}
 	Timeout         time.Duration
 
@@ -141,9 +141,9 @@ func WithWebhook(url string) BotOption {
 	}
 }
 
-// SetContext parses the json and returns a result.
-func (bot *BotAPI) SetContext(data string) *BotAPI {
-	bot.Context = &JSON{gjson.Parse(data)}
+// SetUpdate parses the json and returns a result.
+func (bot *BotAPI) SetUpdate(data string) *BotAPI {
+	bot.Update = &JSON{gjson.Parse(data)}
 	return bot
 }
 
