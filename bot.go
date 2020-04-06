@@ -36,6 +36,7 @@ type BotAPI struct {
 
 	Self            JSON
 	Client          *req.Req
+	Context         *JSON
 	shutdownChannel chan interface{}
 	Timeout         time.Duration
 
@@ -51,11 +52,6 @@ type JSON struct {
 // The result should be a JSON array or object.
 func (t JSON) Get(path string) JSON {
 	return JSON{gjson.Get(t.Raw, path)}
-}
-
-// JSONParse parses the json and returns a result.
-func JSONParse(data string) JSON {
-	return JSON{gjson.Parse(data)}
 }
 
 // Array returns back an array of values.
@@ -145,6 +141,12 @@ func WithWebhook(url string) BotOption {
 	}
 }
 
+// SetContext parses the json and returns a result.
+func (bot *BotAPI) SetContext(data string) *BotAPI {
+	bot.Context = &JSON{gjson.Parse(data)}
+	return bot
+}
+
 // MakeRequest makes a request to a specific endpoint with our token.
 func (bot *BotAPI) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 	method := fmt.Sprintf(bot.apiEndpoint, bot.Token, endpoint)
@@ -194,7 +196,7 @@ func (bot *BotAPI) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 		log.Printf("%-v", resp)
 	}
 	data, _ := resp.ToString()
-	apiJSON := JSONParse(data)
+	apiJSON := JSON{gjson.Parse(data)}
 	ok := apiJSON.Get("ok").Bool()
 	if !ok {
 		// error
