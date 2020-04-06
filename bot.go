@@ -24,11 +24,15 @@ const (
 // JSONBody is send message
 type JSONBody map[string]interface{}
 
+// BotOption type for additional Server options
+type BotOption func(*BotAPI)
+
 // BotAPI allows you to interact with the Telegram Bot API.
 type BotAPI struct {
-	Token  string
-	Debug  bool
-	Buffer int
+	Debug   bool
+	Token   string
+	Webhook string
+	Buffer  int
 
 	Self            JSON
 	Client          *req.Req
@@ -88,20 +92,20 @@ func (e Error) Error() string {
 }
 
 // New bot instance
-func New(token string) (*BotAPI, error) {
-	return NewBotAPIWith(token, APIEndpoint)
-}
-
-// NewBotAPIWith creates a new BotAPI instance and allows you to pass API endpoint.
-func NewBotAPIWith(token string, apiEndpoint string) (*BotAPI, error) {
+func New(token string, options ...BotOption) (*BotAPI, error) {
+	if len(token) == 0 {
+		return &BotAPI{}, fmt.Errorf("token is empty")
+	}
 	client := req.New()
-
 	bot := &BotAPI{
 		Token:       token,
 		Client:      client,
 		Buffer:      100,
 		Timeout:     10,
-		apiEndpoint: apiEndpoint,
+		apiEndpoint: APIEndpoint,
+	}
+	for _, optFunc := range options {
+		optFunc(bot)
 	}
 
 	self, err := bot.GetMe()
@@ -112,6 +116,28 @@ func NewBotAPIWith(token string, apiEndpoint string) (*BotAPI, error) {
 	bot.Self = self
 
 	return bot, nil
+}
+
+// WithDebug set debug mode
+func WithDebug(isDebug bool) BotOption {
+	return func(bot *BotAPI) {
+		bot.Debug = isDebug
+	}
+}
+
+// WithEndpoint set base api
+func WithEndpoint(endpoint string, timeout time.Duration) BotOption {
+	return func(bot *BotAPI) {
+		bot.apiEndpoint = endpoint
+		bot.Timeout = timeout
+	}
+}
+
+// WithWebhook returns BotOption for given Webhook URL and Server address to listen.
+func WithWebhook(url string) BotOption {
+	return func(bot *BotAPI) {
+		bot.Webhook = url
+	}
 }
 
 // MakeRequest makes a request to a specific endpoint with our token.
@@ -189,21 +215,15 @@ func (bot *BotAPI) GetMe() (JSON, error) {
 	return bot.MakeRequest("getMe", nil)
 }
 
-// GetUpdates fetches updates.
-// If a WebHook is set, this will not return any data!
-func (bot *BotAPI) GetUpdates(params JSONBody) ([]JSON, error) {
-	resp, err := bot.MakeRequest("getUpdates", params)
-	if err != nil {
-		return []JSON{}, err
+// GetUpdates starts and returns a channel for getting updates.
+func (bot *BotAPI) GetUpdates(params JSONBody) (chan JSON, error) {
+	if bot.Webhook != "" {
+		return bot.listenUpdates()
 	}
-	return resp.Array(), nil
-}
 
-// UpdatesChannel is the channel for getting updates.
-type UpdatesChannel <-chan JSON
+	// first delete webbook
+	bot.DeleteWebhook()
 
-// GetUpdatesChan starts and returns a channel for getting updates.
-func (bot *BotAPI) GetUpdatesChan(params JSONBody) (UpdatesChannel, error) {
 	ch := make(chan JSON, bot.Buffer)
 	offset, _ := strconv.ParseInt(strconv.Itoa(params["offset"].(int)), 10, 64)
 
@@ -216,7 +236,7 @@ func (bot *BotAPI) GetUpdatesChan(params JSONBody) (UpdatesChannel, error) {
 			default:
 			}
 
-			updates, err := bot.GetUpdates(params)
+			resp, err := bot.MakeRequest("getUpdates", params)
 			if err != nil {
 				log.Println(err)
 				log.Println("Failed to get updates, retrying in 3 seconds...")
@@ -225,6 +245,7 @@ func (bot *BotAPI) GetUpdatesChan(params JSONBody) (UpdatesChannel, error) {
 				continue
 			}
 
+			updates := resp.Array()
 			for _, update := range updates {
 				if update.Get("update_id").Int() >= offset {
 					params["offset"] = update.Get("update_id").Int() + 1
@@ -235,6 +256,23 @@ func (bot *BotAPI) GetUpdatesChan(params JSONBody) (UpdatesChannel, error) {
 	}()
 
 	return ch, nil
+}
+
+// listenUpdates
+func (bot *BotAPI) listenUpdates() (chan JSON, error) {
+	updates := make(chan JSON)
+	defer func() {
+		updates <- JSON{}
+	}()
+	_, err := bot.SetWebhook(JSONBody{
+		"url":             bot.Webhook,
+		"max_connections": 100,
+	})
+
+	if err != nil {
+		return updates, err
+	}
+	return updates, nil
 }
 
 // GetWebhookInfo allows you to fetch information about a webhook and if

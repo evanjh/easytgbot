@@ -14,8 +14,10 @@ const (
 )
 
 func getBot(t *testing.T) (*easytgbot.BotAPI, error) {
-	bot, err := easytgbot.New(TestToken)
-	bot.Debug = true
+	bot, err := easytgbot.New(
+		TestToken,
+		easytgbot.WithDebug(true),
+	)
 	if err != nil {
 		t.Error(err)
 		t.Fail()
@@ -34,42 +36,14 @@ func TestNew(t *testing.T) {
 	}
 }
 func TestNewBotAPIWithNoToken(t *testing.T) {
-	_, err := easytgbot.NewBotAPIWith("", easytgbot.APIEndpoint)
+	_, err := easytgbot.New(
+		"",
+		easytgbot.WithDebug(true),
+	)
 
 	if err == nil {
 		t.Error(err)
 		t.Fail()
-	}
-}
-
-func TestGetUpdates(t *testing.T) {
-	bot, _ := getBot(t)
-	bot.DeleteWebhook()
-	_, err := bot.GetUpdates(easytgbot.JSONBody{
-		"offset": 0,
-		"limit":  1,
-	})
-	if err != nil {
-		t.Error(err)
-		t.Fail()
-	}
-}
-
-func TestUpdatesChan(t *testing.T) {
-	bot, _ := getBot(t)
-	bot.DeleteWebhook()
-	updates, err := bot.GetUpdatesChan(easytgbot.JSONBody{
-		"offset": 0,
-		"limit":  1,
-	})
-
-	if err != nil {
-		t.Error(err)
-		t.Fail()
-	}
-
-	for update := range updates {
-		fmt.Printf("update: %T %+[1]v\n", update)
 	}
 }
 
@@ -127,5 +101,22 @@ func TestGetWebhookInfo(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 		t.Fail()
+	}
+}
+
+func TestUpdates(t *testing.T) {
+	bot, _ := getBot(t)
+	updates, err := bot.GetUpdates(easytgbot.JSONBody{
+		"offset": 0,
+		"limit":  1,
+	})
+
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+
+	for update := range updates {
+		fmt.Printf("update: %T %+[1]v\n", update)
 	}
 }
