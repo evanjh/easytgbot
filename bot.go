@@ -147,6 +147,11 @@ func (bot *BotAPI) SetUpdate(data string) *BotAPI {
 	return bot
 }
 
+// GetUpdate get update
+func (bot *BotAPI) GetUpdate() *JSON {
+	return bot.Update
+}
+
 // MakeRequest makes a request to a specific endpoint with our token.
 func (bot *BotAPI) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 	method := fmt.Sprintf(bot.apiEndpoint, bot.Token, endpoint)
