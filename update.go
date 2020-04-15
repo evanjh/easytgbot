@@ -6,18 +6,13 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// Update is message
-type Update struct {
-	JSON
-}
-
 // NewUpdate is create update instance
 func NewUpdate(data string) *Update {
-	return &Update{JSON{gjson.Parse(data)}}
+	return &Update{gjson.Parse(data)}
 }
 
 // Chat get update
-func (update *Update) Chat() (JSON, error) {
+func (update *Update) Chat() (Update, error) {
 	message := update.Get("message")
 	if message.Exists() {
 		return message.Get("chat"), nil
@@ -46,11 +41,11 @@ func (update *Update) Chat() (JSON, error) {
 		}
 	}
 
-	return JSON{}, fmt.Errorf("chat is not found")
+	return Update{}, fmt.Errorf("chat is not found")
 }
 
 // From get update
-func (update *Update) From() (JSON, error) {
+func (update *Update) From() (Update, error) {
 	message := update.Get("message")
 	if message.Exists() {
 		return message.Get("from"), nil
@@ -96,5 +91,5 @@ func (update *Update) From() (JSON, error) {
 		return chosenInlineResult.Get("from"), nil
 	}
 
-	return JSON{}, fmt.Errorf("from is not found")
+	return Update{}, fmt.Errorf("from is not found")
 }

@@ -31,7 +31,7 @@ type Bot struct {
 	Webhook string
 	Buffer  int
 	Timeout time.Duration
-	Self    JSON
+	Self    Update
 
 	handlers        map[string]interface{}
 	client          *req.Req
@@ -60,38 +60,38 @@ type Settings struct {
 	Timeout time.Duration // Default: 10s
 }
 
-// JSON is a response from the Telegram API with the result stored raw.
-type JSON struct {
+// Update is a response from the Telegram API with the result stored raw.
+type Update struct {
 	gjson.Result
 }
 
 // Get searches result for the specified path.
-// The result should be a JSON array or object.
-func (t JSON) Get(path string) JSON {
-	return JSON{gjson.Get(t.Raw, path)}
+// The result should be a Update array or object.
+func (t Update) Get(path string) Update {
+	return Update{gjson.Get(t.Raw, path)}
 }
 
 // Array returns back an array of values.
 // If the result represents a non-existent value, then an empty array will be
-// returned. If the result is not a JSON array, the return value will be an
+// returned. If the result is not a Update array, the return value will be an
 // array containing one result.
-func (t JSON) Array() []JSON {
-	res := []JSON{}
+func (t Update) Array() []Update {
+	res := []Update{}
 	if t.IsArray() {
 		t.ForEach(func(key, value gjson.Result) bool {
-			res = append(res, JSON{value})
+			res = append(res, Update{value})
 			return true // keep iterating
 		})
 	}
 	return res
 }
 
-// Map returns back an map of values. The result should be a JSON array.
-func (t JSON) Map() map[string]JSON {
-	res := map[string]JSON{}
+// Map returns back an map of values. The result should be a Update array.
+func (t Update) Map() map[string]Update {
+	res := map[string]Update{}
 	if t.IsObject() {
 		t.ForEach(func(key, value gjson.Result) bool {
-			res[key.String()] = JSON{value}
+			res[key.String()] = Update{value}
 			return true // keep iterating
 		})
 	}
@@ -102,7 +102,7 @@ func (t JSON) Map() map[string]JSON {
 type Error struct {
 	Code       int64
 	Message    string
-	Parameters JSON
+	Parameters Update
 }
 
 func (e Error) Error() string {
@@ -141,6 +141,8 @@ func New(token string, opts Settings) (*Bot, error) {
 		handlers:    make(map[string]interface{}),
 	}
 
+	
+
 	self, err := bot.GetMe()
 	if err != nil {
 		return nil, err
@@ -152,7 +154,7 @@ func New(token string, opts Settings) (*Bot, error) {
 }
 
 // MakeRequest makes a request to a specific endpoint with our token.
-func (bot *Bot) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
+func (bot *Bot) MakeRequest(endpoint string, params JSONBody) (Update, error) {
 	method := fmt.Sprintf(bot.apiEndpoint, bot.Token, endpoint)
 	var jsonBody JSONBody
 	if params == nil {
@@ -192,7 +194,7 @@ func (bot *Bot) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 	}
 
 	if err != nil {
-		return JSON{}, err
+		return Update{}, err
 	}
 	if bot.Debug {
 		log.Printf("%+v", resp)
@@ -200,7 +202,7 @@ func (bot *Bot) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 		log.Printf("%-v", resp)
 	}
 	data, _ := resp.ToString()
-	apiJSON := JSON{gjson.Parse(data)}
+	apiJSON := Update{gjson.Parse(data)}
 	ok := apiJSON.Get("ok").Bool()
 	if !ok {
 		// error
@@ -222,12 +224,12 @@ func (bot *Bot) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 // This method is called upon creation to validate the token,
 // and so you may get this data from Bot.Self without the need for
 // another request.
-func (bot *Bot) GetMe() (JSON, error) {
+func (bot *Bot) GetMe() (Update, error) {
 	return bot.MakeRequest("getMe", nil)
 }
 
 // GetUpdates starts and returns a channel for getting updates.
-func (bot *Bot) GetUpdates(params JSONBody) (chan JSON, error) {
+func (bot *Bot) GetUpdates(params JSONBody) (chan Update, error) {
 	if bot.Webhook != "" {
 		return bot.listenUpdates()
 	}
@@ -235,7 +237,7 @@ func (bot *Bot) GetUpdates(params JSONBody) (chan JSON, error) {
 	// first delete webbook
 	bot.DeleteWebhook()
 
-	ch := make(chan JSON, bot.Buffer)
+	ch := make(chan Update, bot.Buffer)
 	offset, _ := strconv.ParseInt(strconv.Itoa(params["offset"].(int)), 10, 64)
 
 	go func() {
@@ -270,14 +272,14 @@ func (bot *Bot) GetUpdates(params JSONBody) (chan JSON, error) {
 }
 
 // listenUpdates
-func (bot *Bot) listenUpdates() (chan JSON, error) {
-	updates := make(chan JSON)
+func (bot *Bot) listenUpdates() (chan Update, error) {
+	updates := make(chan Update)
 	defer func() {
-		updates <- JSON{}
+		updates <- Update{}
 	}()
 	_, err := bot.SetWebhook(JSONBody{
 		"url":             bot.Webhook,
-		"max_connections": 100,
+		"max_connections": bot.Buffer,
 	})
 
 	if err != nil {
@@ -288,7 +290,7 @@ func (bot *Bot) listenUpdates() (chan JSON, error) {
 
 // GetWebhookInfo allows you to fetch information about a webhook and if
 // one currently is set, along with pending update count and error messages.
-func (bot *Bot) GetWebhookInfo() (JSON, error) {
+func (bot *Bot) GetWebhookInfo() (Update, error) {
 	return bot.MakeRequest("getWebhookInfo", nil)
 }
 
@@ -298,19 +300,19 @@ func (bot *Bot) GetWebhookInfo() (JSON, error) {
 //
 // If you do not have a legitimate TLS certificate, you need to include
 // your self signed certificate with the config.
-func (bot *Bot) SetWebhook(params JSONBody) (JSON, error) {
+func (bot *Bot) SetWebhook(params JSONBody) (Update, error) {
 	info, err := bot.GetWebhookInfo()
 	if err != nil {
-		return JSON{}, err
+		return Update{}, err
 	}
 	url := info.Get("url").String()
 	if url == params["url"] {
-		return JSON{}, err
+		return Update{}, err
 	}
 	return bot.MakeRequest("setWebhook", params)
 }
 
 // DeleteWebhook unsets the webhook.
-func (bot *Bot) DeleteWebhook() (JSON, error) {
+func (bot *Bot) DeleteWebhook() (Update, error) {
 	return bot.MakeRequest("deleteWebhook", nil)
 }
