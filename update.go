@@ -2,11 +2,18 @@ package easytgbot
 
 import (
 	"fmt"
+
+	"github.com/tidwall/gjson"
 )
 
 // Update is message
 type Update struct {
 	JSON
+}
+
+// NewUpdate is create update instance
+func NewUpdate(data string) *Update {
+	return &Update{JSON{gjson.Parse(data)}}
 }
 
 // Chat get update

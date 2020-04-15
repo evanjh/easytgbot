@@ -13,10 +13,12 @@ const (
 	TestToken = "951886466:AAEhTr7--GVVIkEhVuWUZZqGNC1nxMBVQ7o"
 )
 
-func getBot(t *testing.T) (*easytgbot.BotAPI, error) {
+func getBot(t *testing.T) (*easytgbot.Bot, error) {
 	bot, err := easytgbot.New(
 		TestToken,
-		easytgbot.WithDebug(true),
+		easytgbot.Settings{
+			Debug: true,
+		},
 	)
 	if err != nil {
 		t.Error(err)
@@ -27,18 +29,21 @@ func getBot(t *testing.T) (*easytgbot.BotAPI, error) {
 
 func TestNew(t *testing.T) {
 	bot, err := getBot(t)
-	self := bot.Self
-	fmt.Printf("Self: %T %+[1]v\n", self)
 
 	if err != nil {
 		t.Error(err)
 		t.Fail()
 	}
+
+	self := bot.Self
+	fmt.Printf("Self: %T %+[1]v\n", self)
 }
-func TestNewBotAPIWithNoToken(t *testing.T) {
+func TestNewBotWithNoToken(t *testing.T) {
 	_, err := easytgbot.New(
 		"",
-		easytgbot.WithDebug(true),
+		easytgbot.Settings{
+			Debug: true,
+		},
 	)
 
 	if err == nil {

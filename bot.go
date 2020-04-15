@@ -16,31 +16,48 @@ import (
 const (
 	// UserAgent is http user-agent header
 	UserAgent = "EasyTGBot/1.0.0"
-	// APIEndpoint is the endpoint for all API methods,
+	// Endpoint is the endpoint for all API methods,
 	// with formatting for Sprintf.
-	APIEndpoint = "https://api.telegram.org/bot%s/%s"
+	Endpoint = "https://api.telegram.org/bot%s/%s"
 )
 
 // JSONBody is send message
 type JSONBody map[string]interface{}
 
-// BotOption type for additional Server options
-type BotOption func(*BotAPI)
-
-// BotAPI allows you to interact with the Telegram Bot API.
-type BotAPI struct {
+// Bot allows you to interact with the Telegram Bot API.
+type Bot struct {
 	Debug   bool
 	Token   string
 	Webhook string
 	Buffer  int
+	Timeout time.Duration
+	Self    JSON
 
-	Self            JSON
-	Client          *req.Req
-	Update          *Update
+	handlers        map[string]interface{}
+	client          *req.Req
 	shutdownChannel chan interface{}
-	Timeout         time.Duration
+	apiEndpoint     string
+}
 
-	apiEndpoint string
+// Settings represents a utility struct for passing certain
+// properties of a bot around and is required to make bots.
+type Settings struct {
+	// debug
+	Debug bool // default: false
+	// Telegram API Url
+	Endpoint string
+
+	// Webhook
+	Webhook string
+
+	// Telegram token
+	Token string
+
+	// Updates channel capacity
+	Updates int // Default: 100
+
+	// Timeout
+	Timeout time.Duration // Default: 10s
 }
 
 // JSON is a response from the Telegram API with the result stored raw.
@@ -93,20 +110,35 @@ func (e Error) Error() string {
 }
 
 // New bot instance
-func New(token string, options ...BotOption) (*BotAPI, error) {
+func New(token string, opts Settings) (*Bot, error) {
 	if len(token) == 0 {
-		return &BotAPI{}, fmt.Errorf("token is empty")
+		return &Bot{}, fmt.Errorf("token is empty")
 	}
+
+	if opts.Updates == 0 {
+		opts.Updates = 100
+	}
+
+	if opts.Timeout == 0 {
+		opts.Timeout = 10 * time.Second
+	}
+
+	if opts.Endpoint == "" {
+		opts.Endpoint = Endpoint
+	}
+
 	client := req.New()
-	bot := &BotAPI{
-		Token:       token,
-		Client:      client,
-		Buffer:      100,
-		Timeout:     10,
-		apiEndpoint: APIEndpoint,
-	}
-	for _, optFunc := range options {
-		optFunc(bot)
+	bot := &Bot{
+		Debug:   opts.Debug == true,
+		Token:   token,
+		Webhook: opts.Webhook,
+
+		Buffer:  opts.Updates,
+		Timeout: opts.Timeout,
+
+		client:      client,
+		apiEndpoint: opts.Endpoint,
+		handlers:    make(map[string]interface{}),
 	}
 
 	self, err := bot.GetMe()
@@ -119,41 +151,8 @@ func New(token string, options ...BotOption) (*BotAPI, error) {
 	return bot, nil
 }
 
-// WithDebug set debug mode
-func WithDebug(isDebug bool) BotOption {
-	return func(bot *BotAPI) {
-		bot.Debug = isDebug
-	}
-}
-
-// WithEndpoint set base api
-func WithEndpoint(endpoint string, timeout time.Duration) BotOption {
-	return func(bot *BotAPI) {
-		bot.apiEndpoint = endpoint
-		bot.Timeout = timeout
-	}
-}
-
-// WithWebhook returns BotOption for given Webhook URL and Server address to listen.
-func WithWebhook(url string) BotOption {
-	return func(bot *BotAPI) {
-		bot.Webhook = url
-	}
-}
-
-// SetUpdate parses the json and returns a result.
-func (bot *BotAPI) SetUpdate(data string) *BotAPI {
-	bot.Update = &Update{JSON{gjson.Parse(data)}}
-	return bot
-}
-
-// GetUpdate get update
-func (bot *BotAPI) GetUpdate() *Update {
-	return bot.Update
-}
-
 // MakeRequest makes a request to a specific endpoint with our token.
-func (bot *BotAPI) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
+func (bot *Bot) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 	method := fmt.Sprintf(bot.apiEndpoint, bot.Token, endpoint)
 	var jsonBody JSONBody
 	if params == nil {
@@ -163,7 +162,7 @@ func (bot *BotAPI) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 	}
 
 	// set timeout
-	bot.Client.SetTimeout(bot.Timeout * time.Second)
+	bot.client.SetTimeout(bot.Timeout)
 	// post data
 	var (
 		resp *req.Resp
@@ -187,9 +186,9 @@ func (bot *BotAPI) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 				fileUploads = append(fileUploads, value.(req.FileUpload))
 			}
 		}
-		resp, err = bot.Client.Post(method, header, fromParams, fileUploads)
+		resp, err = bot.client.Post(method, header, fromParams, fileUploads)
 	} else {
-		resp, err = bot.Client.Post(method, header, req.BodyJSON(&jsonBody))
+		resp, err = bot.client.Post(method, header, req.BodyJSON(&jsonBody))
 	}
 
 	if err != nil {
@@ -221,14 +220,14 @@ func (bot *BotAPI) MakeRequest(endpoint string, params JSONBody) (JSON, error) {
 // GetMe fetches the currently authenticated bot.
 //
 // This method is called upon creation to validate the token,
-// and so you may get this data from BotAPI.Self without the need for
+// and so you may get this data from Bot.Self without the need for
 // another request.
-func (bot *BotAPI) GetMe() (JSON, error) {
+func (bot *Bot) GetMe() (JSON, error) {
 	return bot.MakeRequest("getMe", nil)
 }
 
 // GetUpdates starts and returns a channel for getting updates.
-func (bot *BotAPI) GetUpdates(params JSONBody) (chan JSON, error) {
+func (bot *Bot) GetUpdates(params JSONBody) (chan JSON, error) {
 	if bot.Webhook != "" {
 		return bot.listenUpdates()
 	}
@@ -271,7 +270,7 @@ func (bot *BotAPI) GetUpdates(params JSONBody) (chan JSON, error) {
 }
 
 // listenUpdates
-func (bot *BotAPI) listenUpdates() (chan JSON, error) {
+func (bot *Bot) listenUpdates() (chan JSON, error) {
 	updates := make(chan JSON)
 	defer func() {
 		updates <- JSON{}
@@ -289,7 +288,7 @@ func (bot *BotAPI) listenUpdates() (chan JSON, error) {
 
 // GetWebhookInfo allows you to fetch information about a webhook and if
 // one currently is set, along with pending update count and error messages.
-func (bot *BotAPI) GetWebhookInfo() (JSON, error) {
+func (bot *Bot) GetWebhookInfo() (JSON, error) {
 	return bot.MakeRequest("getWebhookInfo", nil)
 }
 
@@ -299,7 +298,7 @@ func (bot *BotAPI) GetWebhookInfo() (JSON, error) {
 //
 // If you do not have a legitimate TLS certificate, you need to include
 // your self signed certificate with the config.
-func (bot *BotAPI) SetWebhook(params JSONBody) (JSON, error) {
+func (bot *Bot) SetWebhook(params JSONBody) (JSON, error) {
 	info, err := bot.GetWebhookInfo()
 	if err != nil {
 		return JSON{}, err
@@ -312,6 +311,6 @@ func (bot *BotAPI) SetWebhook(params JSONBody) (JSON, error) {
 }
 
 // DeleteWebhook unsets the webhook.
-func (bot *BotAPI) DeleteWebhook() (JSON, error) {
+func (bot *Bot) DeleteWebhook() (JSON, error) {
 	return bot.MakeRequest("deleteWebhook", nil)
 }
