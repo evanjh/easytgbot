@@ -131,3 +131,26 @@ func (update *Update) From() (Update, error) {
 
 	return Update{}, fmt.Errorf("from is not found")
 }
+
+
+// Reply get telegram bot
+func (update *Update) Reply(text string, extra JSONBody) JSONBody {
+	message := update.Get("message")
+	messageID := message.Get("message_id").Int()
+	chat, _ := update.Chat()
+	chatID := chat.Get("id").Int()
+	return mergeJSON(JSONBody{
+		"method":              "sendMessage",
+		"chat_id":             chatID,
+		"reply_to_message_id": messageID,
+		"text":                text,
+	}, extra)
+}
+
+// mergeJSON merge json body
+func mergeJSON(map1 JSONBody, map2 JSONBody) JSONBody {
+	for k, v := range map2 {
+		map1[k] = v
+	}
+	return map1
+}
