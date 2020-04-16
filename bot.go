@@ -342,6 +342,6 @@ func (bot *Bot) Handle(endpoint interface{}, handler interface{}) {
 }
 // ApplyHandlers 
 func (bot *Bot) ApplyHandlers(update *Update) (string, error) {
-	fmt.Printf("%T %+[1]v\n", bot.handlers)
+	fmt.Printf("%T %+[1]v\n", update.GetType())
 	return "aaa", nil
 }

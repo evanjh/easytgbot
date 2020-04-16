@@ -11,6 +11,55 @@ func NewUpdate(data string) *Update {
 	return &Update{gjson.Parse(data)}
 }
 
+// GetType get message type 
+func (update *Update) GetType() string  {
+	MessageSubTypes := []string{
+		"voice",
+		"video_note",
+		"video",
+		"animation",
+		"venue",
+		"text",
+		"supergroup_chat_created",
+		"successful_payment",
+		"sticker",
+		"pinned_message",
+		"photo",
+		"new_chat_title",
+		"new_chat_photo",
+		"new_chat_members",
+		"migrate_to_chat_id",
+		"migrate_from_chat_id",
+		"location",
+		"left_chat_member",
+		"invoice",
+		"group_chat_created",
+		"game",
+		"document",
+		"delete_chat_photo",
+		"contact",
+		"channel_chat_created",
+		"audio",
+		"connected_website",
+		"passport_data",
+		"poll",
+		"forward_date",
+	}
+	if update.Get("message").Exists() || update.Get("channel_post").Exists() {
+		for _, key := range MessageSubTypes {
+			if update.Get(key).Exists()	{
+				if key == "forward_date" {
+					return "forward"
+				} else {
+					return key
+				}
+				
+			}
+		}
+	}
+	return "unknown"
+}
+
 // Chat get update
 func (update *Update) Chat() (Update, error) {
 	message := update.Get("message")
