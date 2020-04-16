@@ -19,8 +19,6 @@ const (
 	// Endpoint is the endpoint for all API methods,
 	// with formatting for Sprintf.
 	Endpoint = "https://api.telegram.org/bot%s/%s"
-	// Handler: func(*Message)
-	OnText              = "\atext"
 )
 
 // JSONBody is send message

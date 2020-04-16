@@ -43,7 +43,7 @@ func (update *Update) GetType() string  {
 		"connected_website",
 		"passport_data",
 		"poll",
-		"forward_date",
+		"forward_date", // forward
 	}
 	message,err := update.Message()
 	if err == nil {
