@@ -45,79 +45,68 @@ func (update *Update) GetType() string  {
 		"poll",
 		"forward_date",
 	}
-	if update.Get("message").Exists() || update.Get("channel_post").Exists() {
+	message,err := update.Message()
+	if err == nil {
 		for _, key := range MessageSubTypes {
-			if update.Get(key).Exists()	{
+			if message.Get(key).Exists()	{
 				if key == "forward_date" {
 					return "forward"
 				} else {
 					return key
 				}
-				
 			}
 		}
-	}
+	} 	
 	return "unknown"
 }
 
-// Chat get update
-func (update *Update) Chat() (Update, error) {
+// Message get message 
+func (update *Update) Message() (Update, error)  {
 	message := update.Get("message")
 	if message.Exists() {
-		return message.Get("chat"), nil
+		return message, nil
 	}
 
 	editedMessage := update.Get("edited_message")
 	if editedMessage.Exists() {
-		return editedMessage.Get("chat"), nil
+		return editedMessage, nil
 	}
 
 	channelPost := update.Get("channel_post")
 	if channelPost.Exists() {
-		return channelPost.Get("chat"), nil
+		return channelPost, nil
 	}
 
 	editedChannelPost := update.Get("edited_channel_post")
 	if editedChannelPost.Exists() {
-		return editedChannelPost.Get("chat"), nil
+		return editedChannelPost, nil
 	}
 
 	callbackQuery := update.Get("callback_query")
 	if callbackQuery.Exists() {
 		message := callbackQuery.Get("message")
 		if message.Exists() {
-			return message.Get("chat"), nil
+			return message, nil
 		}
 	}
 
-	return Update{}, fmt.Errorf("chat is not found")
+	return Update{}, fmt.Errorf("chat is not found")	
+}
+
+// Chat get update
+func (update *Update) Chat() (Update, error) {
+	message,err := update.Message()
+	if err!=nil {
+		return Update{}, fmt.Errorf("chat is not found")	
+	}
+	return message.Get("chat"),nil 
 }
 
 // From get update
 func (update *Update) From() (Update, error) {
-	message := update.Get("message")
-	if message.Exists() {
-		return message.Get("from"), nil
-	}
-
-	editedMessage := update.Get("edited_message")
-	if editedMessage.Exists() {
-		return editedMessage.Get("from"), nil
-	}
-
-	channelPost := update.Get("channel_post")
-	if channelPost.Exists() {
-		return channelPost.Get("from"), nil
-	}
-
-	editedChannelPost := update.Get("edited_channel_post")
-	if editedChannelPost.Exists() {
-		return editedChannelPost.Get("from"), nil
-	}
-
-	callbackQuery := update.Get("callback_query")
-	if callbackQuery.Exists() {
-		return callbackQuery.Get("from"), nil
+	message,err := update.Message()
+	if err == nil {
+		return message.Get("from"),nil
 	}
 
 	inlineQuery := update.Get("inline_query")
