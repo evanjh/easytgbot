@@ -339,7 +339,7 @@ func (bot *Bot) Handle(endpoint interface{}, handler interface{}) {
 	}
 }
 // ApplyHandlers 
-func (bot *Bot) ApplyHandlers(update *Update) error {
+func (bot *Bot) ApplyHandlers(update *Update) JSONBody {
 	updateType := update.GetType()
 	// check handler has exists
 	handler, ok := bot.handlers[updateType]
@@ -348,8 +348,8 @@ func (bot *Bot) ApplyHandlers(update *Update) error {
 	}
 
 	// execute
-	if handler, ok := handler.(func(*Update)error); ok {
+	if handler, ok := handler.(func(*Update)JSONBody); ok {
 		return handler(update)
 	}
-	return nil
+	return JSONBody{}
 }
