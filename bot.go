@@ -339,17 +339,17 @@ func (bot *Bot) Handle(endpoint interface{}, handler interface{}) {
 	}
 }
 // ApplyHandlers 
-func (bot *Bot) ApplyHandlers(update *Update) JSONBody {
+func (bot *Bot) ApplyHandlers(update *Update) (JSONBody, error) {
 	updateType := update.GetType()
 	// check handler has exists
 	handler, ok := bot.handlers[updateType]
 	if !ok {
-		return fmt.Errorf("unsupported update type")
+		return JSONBody{}, fmt.Errorf("unsupported update type")
 	}
 
 	// execute
 	if handler, ok := handler.(func(*Update)JSONBody); ok {
-		return handler(update)
+		return handler(update), nil
 	}
-	return JSONBody{}
+	return JSONBody{}, fmt.Errorf("unsupported update type") 
 }
