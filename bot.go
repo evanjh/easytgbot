@@ -339,7 +339,16 @@ func (bot *Bot) Handle(endpoint interface{}, handler interface{}) {
 	}
 }
 // ApplyHandlers 
-func (bot *Bot) ApplyHandlers(update *Update) (string, error) {
-	fmt.Printf("%T %+[1]v\n", update.GetType())
-	return "aaa", nil
+func (bot *Bot) ApplyHandlers(update *Update) error {
+	updateType := update.GetType()
+	// check handler has exists
+	if handler, ok := bot.handlers[updateType]; !ok {
+		return fmt.Errorf("unsupported update type")
+	}
+
+	// execute
+	if handler, ok := handler.(func(*.Update)error); ok {
+		return handler(update)
+	}
+	return nil
 }
