@@ -340,3 +340,8 @@ func (bot *Bot) Handle(endpoint interface{}, handler interface{}) {
 		panic("easytgbot: unsupported endpoint")
 	}
 }
+// ApplyHandlers 
+func (bot *Bot) ApplyHandlers() (string, error) {
+	fmt.Printf("%T %+[1]v\n", bot.handlers)
+	return "aaa", nil
+}
