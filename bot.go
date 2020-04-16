@@ -19,6 +19,8 @@ const (
 	// Endpoint is the endpoint for all API methods,
 	// with formatting for Sprintf.
 	Endpoint = "https://api.telegram.org/bot%s/%s"
+	// Handler: func(*Message)
+	OnText              = "\atext"
 )
 
 // JSONBody is send message
@@ -315,4 +317,26 @@ func (bot *Bot) SetWebhook(params JSONBody) (Update, error) {
 // DeleteWebhook unsets the webhook.
 func (bot *Bot) DeleteWebhook() (Update, error) {
 	return bot.MakeRequest("deleteWebhook", nil)
+}
+
+// Handle lets you set the handler for some command name or
+// one of the supported endpoints.
+//
+// Example:
+//
+//     b.handle("/help", func (m *tb.Message) {})
+//     b.handle(tb.OnEdited, func (m *tb.Message) {})
+//     b.handle(tb.OnQuery, func (q *tb.Query) {})
+//
+//     // make a hook for one of your preserved (by-pointer)
+//     // inline buttons.
+//     b.handle(&inlineButton, func (c *tb.Callback) {})
+//
+func (bot *Bot) Handle(endpoint interface{}, handler interface{}) {
+	switch end := endpoint.(type) {
+	case string:
+		bot.handlers[end] = handler
+	default:
+		panic("easytgbot: unsupported endpoint")
+	}
 }
