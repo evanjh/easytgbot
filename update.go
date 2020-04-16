@@ -11,8 +11,8 @@ func NewUpdate(data string) *Update {
 	return &Update{gjson.Parse(data)}
 }
 
-// GetType get message type 
-func (update *Update) GetType() string  {
+// GetType get message type
+func (update *Update) GetType() string {
 	MessageSubTypes := []string{
 		"voice",
 		"video_note",
@@ -45,23 +45,56 @@ func (update *Update) GetType() string  {
 		"poll",
 		"forward_date", // forward
 	}
-	message,err := update.Message()
+	message, err := update.Message()
 	if err == nil {
 		for _, key := range MessageSubTypes {
-			if message.Get(key).Exists()	{
+			if message.Get(key).Exists() {
 				if key == "forward_date" {
 					return "forward"
-				} else {
-					return key
 				}
+				return key
 			}
 		}
-	} 	
+	}
 	return "unknown"
 }
 
-// Message get message 
-func (update *Update) Message() (Update, error)  {
+// Command get command
+func (update *Update) Command() string {
+	entities := update.Entities()
+	for _, entity := range entities {
+		etype := entity.Get("type").String()
+		switch etype {
+		case "bot_command":
+			message, err := update.Message()
+			if err == nil {
+				text := message.Get("text").String()
+				command := text[entity.Get("offset").Int():entity.Get("length").Int()]
+				return command
+			}
+		}
+	}
+	return ""
+}
+
+// Entities is Entities
+func (update *Update) Entities() []Update {
+	message, err := update.Message()
+	if err == nil {
+		if message.Get("entities").Exists() {
+			return message.Get("entities").Array()
+		}
+
+		if message.Get("caption_entities").Exists() {
+			return message.Get("caption_entities").Array()
+		}
+	}
+
+	return []Update{}
+}
+
+// Message get message
+func (update *Update) Message() (Update, error) {
 	message := update.Get("message")
 	if message.Exists() {
 		return message, nil
@@ -90,23 +123,23 @@ func (update *Update) Message() (Update, error)  {
 		}
 	}
 
-	return Update{}, fmt.Errorf("chat is not found")	
+	return Update{}, fmt.Errorf("chat is not found")
 }
 
 // Chat get update
 func (update *Update) Chat() (Update, error) {
-	message,err := update.Message()
-	if err!=nil {
-		return Update{}, fmt.Errorf("chat is not found")	
+	message, err := update.Message()
+	if err != nil {
+		return Update{}, fmt.Errorf("chat is not found")
 	}
-	return message.Get("chat"),nil 
+	return message.Get("chat"), nil
 }
 
 // From get update
 func (update *Update) From() (Update, error) {
-	message,err := update.Message()
+	message, err := update.Message()
 	if err == nil {
-		return message.Get("from"),nil
+		return message.Get("from"), nil
 	}
 
 	inlineQuery := update.Get("inline_query")
@@ -131,7 +164,6 @@ func (update *Update) From() (Update, error) {
 
 	return Update{}, fmt.Errorf("from is not found")
 }
-
 
 // Reply get telegram bot
 func (update *Update) Reply(text string, extra JSONBody) JSONBody {

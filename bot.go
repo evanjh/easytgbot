@@ -141,8 +141,6 @@ func New(token string, opts Settings) (*Bot, error) {
 		handlers:    make(map[string]interface{}),
 	}
 
-	
-
 	self, err := bot.GetMe()
 	if err != nil {
 		return nil, err
@@ -319,17 +317,6 @@ func (bot *Bot) DeleteWebhook() (Update, error) {
 
 // Handle lets you set the handler for some command name or
 // one of the supported endpoints.
-//
-// Example:
-//
-//     b.handle("/help", func (m *tb.Message) {})
-//     b.handle(tb.OnEdited, func (m *tb.Message) {})
-//     b.handle(tb.OnQuery, func (q *tb.Query) {})
-//
-//     // make a hook for one of your preserved (by-pointer)
-//     // inline buttons.
-//     b.handle(&inlineButton, func (c *tb.Callback) {})
-//
 func (bot *Bot) Handle(endpoint interface{}, handler interface{}) {
 	switch end := endpoint.(type) {
 	case string:
@@ -338,9 +325,15 @@ func (bot *Bot) Handle(endpoint interface{}, handler interface{}) {
 		panic("easytgbot: unsupported endpoint")
 	}
 }
-// ApplyHandlers 
+
+// ApplyHandlers is apply handler
 func (bot *Bot) ApplyHandlers(update *Update) (JSONBody, error) {
 	updateType := update.GetType()
+	// command first
+	command := update.Command()
+	if len(command) > 0 {
+		updateType = command
+	}
 	// check handler has exists
 	handler, ok := bot.handlers[updateType]
 	if !ok {
@@ -348,8 +341,8 @@ func (bot *Bot) ApplyHandlers(update *Update) (JSONBody, error) {
 	}
 
 	// execute
-	if handler, ok := handler.(func(*Update)JSONBody); ok {
+	if handler, ok := handler.(func(*Update) JSONBody); ok {
 		return handler(update), nil
 	}
-	return JSONBody{}, fmt.Errorf("unsupported update type") 
+	return JSONBody{}, fmt.Errorf("unsupported update type")
 }
