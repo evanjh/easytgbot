@@ -342,12 +342,13 @@ func (bot *Bot) Handle(endpoint interface{}, handler interface{}) {
 func (bot *Bot) ApplyHandlers(update *Update) error {
 	updateType := update.GetType()
 	// check handler has exists
-	if handler, ok := bot.handlers[updateType]; !ok {
+	handler, ok := bot.handlers[updateType]
+	if !ok {
 		return fmt.Errorf("unsupported update type")
 	}
 
 	// execute
-	if handler, ok := handler.(func(*.Update)error); ok {
+	if handler, ok := handler.(func(*Update)error); ok {
 		return handler(update)
 	}
 	return nil
