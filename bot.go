@@ -341,8 +341,8 @@ func (bot *Bot) ApplyHandlers(update *Update) (JSONBody, error) {
 	}
 
 	// execute
-	if handler, ok := handler.(func(*Update) JSONBody); ok {
-		return handler(update), nil
+	if handler, ok := handler.(func(*Bot, *Update) JSONBody); ok {
+		return handler(bot, update), nil
 	}
 	return JSONBody{}, fmt.Errorf("unsupported update type")
 }
