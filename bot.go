@@ -332,6 +332,12 @@ func (bot *Bot) ApplyHandlers(update *Update) (JSONBody, error) {
 	// command first
 	command := update.Command()
 	if len(command) > 0 {
+		if pos := strings.Index(command, "@"); pos > -1 {
+			botName := command[pos+1:]
+			if botName == bot.Self.Get("username").String() {
+				command = command[0:pos]
+			}
+		}
 		updateType = command
 	}
 	// check handler has exists
