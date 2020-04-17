@@ -137,9 +137,10 @@ func (update *Update) Chat() (Update, error) {
 
 // From get update
 func (update *Update) From() (Update, error) {
-	message, err := update.Message()
-	if err == nil {
-		return message.Get("from"), nil
+
+	callbackQuery := update.Get("callback_query")
+	if callbackQuery.Exists() {
+		return callbackQuery.Get("from"), nil
 	}
 
 	inlineQuery := update.Get("inline_query")
@@ -160,6 +161,11 @@ func (update *Update) From() (Update, error) {
 	chosenInlineResult := update.Get("chosen_inline_result")
 	if chosenInlineResult.Exists() {
 		return chosenInlineResult.Get("from"), nil
+	}
+
+	message, err := update.Message()
+	if err == nil {
+		return message.Get("from"), nil
 	}
 
 	return Update{}, fmt.Errorf("from is not found")
