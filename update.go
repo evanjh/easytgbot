@@ -69,7 +69,9 @@ func (update *Update) Command() string {
 			message, err := update.Message()
 			if err == nil {
 				text := message.Get("text").String()
-				command := text[entity.Get("offset").Int():entity.Get("length").Int()]
+				offset := entity.Get("offset").Int()
+				length := offset + entity.Get("length").Int()
+				command := text[offset:length]
 				return command
 			}
 		}
