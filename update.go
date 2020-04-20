@@ -2,6 +2,7 @@ package easytgbot
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tidwall/gjson"
 )
@@ -60,7 +61,7 @@ func (update *Update) GetType() string {
 }
 
 // Command get command
-func (update *Update) Command() string {
+func (update *Update) Command() (string, string) {
 	entities := update.Entities()
 	for _, entity := range entities {
 		etype := entity.Get("type").String()
@@ -72,11 +73,12 @@ func (update *Update) Command() string {
 				offset := entity.Get("offset").Int()
 				length := offset + entity.Get("length").Int()
 				command := text[offset:length]
-				return command
+				payload := strings.TrimSpace(text[length:])
+				return command, payload
 			}
 		}
 	}
-	return ""
+	return "", ""
 }
 
 // Entities is Entities

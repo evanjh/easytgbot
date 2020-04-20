@@ -330,7 +330,7 @@ func (bot *Bot) Handle(endpoint interface{}, handler interface{}) {
 func (bot *Bot) ApplyHandlers(update *Update, extra interface{}) (JSONBody, error) {
 	updateType := update.GetType()
 	// command first
-	command := update.Command()
+	command, _ := update.Command()
 	if len(command) > 0 {
 		if pos := strings.Index(command, "@"); pos > -1 {
 			botName := command[pos+1:]
