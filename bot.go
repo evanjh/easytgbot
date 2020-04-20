@@ -315,6 +315,14 @@ func (bot *Bot) DeleteWebhook() (Update, error) {
 	return bot.MakeRequest("deleteWebhook", nil)
 }
 
+// SendMessage send message
+func (bot *Bot) SendMessage(chatID int64, text string, extra JSONBody) (Update, error) {
+	return bot.MakeRequest("sendMessage", mergeJSON(JSONBody{
+		"chat_id": chatID,
+		"text":    text,
+	}, extra))
+}
+
 // Handle lets you set the handler for some command name or
 // one of the supported endpoints.
 func (bot *Bot) Handle(endpoint interface{}, handler interface{}) {
