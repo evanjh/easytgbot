@@ -32,7 +32,7 @@ type Bot struct {
 	Buffer  int
 	Timeout time.Duration
 	Self    Update
-	Logger  interface{}
+	Logger  *interface{}
 
 	handlers        map[string]interface{}
 	client          *req.Req
