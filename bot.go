@@ -327,7 +327,7 @@ func (bot *Bot) Handle(endpoint interface{}, handler interface{}) {
 }
 
 // ApplyHandlers is apply handler
-func (bot *Bot) ApplyHandlers(update *Update) (JSONBody, error) {
+func (bot *Bot) ApplyHandlers(update *Update, args ...interface{}) (JSONBody, error) {
 	updateType := update.GetType()
 	// command first
 	command := update.Command()
@@ -347,8 +347,8 @@ func (bot *Bot) ApplyHandlers(update *Update) (JSONBody, error) {
 	}
 
 	// execute
-	if handler, ok := handler.(func(*Bot, *Update) JSONBody); ok {
-		return handler(bot, update), nil
+	if handler, ok := handler.(func(*Bot, *Update, ...interface{}) JSONBody); ok {
+		return handler(bot, update, args...), nil
 	}
 	return JSONBody{}, fmt.Errorf("unsupported update type")
 }
