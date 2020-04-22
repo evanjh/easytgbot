@@ -177,7 +177,7 @@ func (update *Update) From() (Update, error) {
 
 // Reply reply message
 func (update *Update) Reply(text string, extra JSONBody) JSONBody {
-	message := update.Get("message")
+	message, _ := update.Message()
 	messageID := message.Get("message_id").Int()
 	chat, _ := update.Chat()
 	chatID := chat.Get("id").Int()
@@ -191,7 +191,7 @@ func (update *Update) Reply(text string, extra JSONBody) JSONBody {
 
 // EditMessageText edit message
 func (update *Update) EditMessageText(text string, extra JSONBody) JSONBody {
-	message := update.Get("message")
+	message, _ := update.Message()
 	messageID := message.Get("message_id").Int()
 	chat, _ := update.Chat()
 	chatID := chat.Get("id").Int()
