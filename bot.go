@@ -380,6 +380,7 @@ func (bot *Bot) ApplyHandlers(update *Update, context interface{}) (JSONBody, er
 		// callback_query
 		if callbackQuery.Exists() {
 			data := callbackQuery.Get("data").String()
+			endpoint = endpoint[1:]
 			if regexp.MustCompile(endpoint).FindStringIndex(data) != nil {
 				if handler, ok := handler.(func(*Bot, *Update, interface{}) JSONBody); ok {
 					return handler(bot, update, context), nil
