@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -331,12 +332,19 @@ func (bot *Bot) Handle(endpoint string, handler interface{}) {
 
 // Action lets you set the handler for some command name or
 // one of the supported endpoints.
-func (bot *Bot) Action(endpoint string, handler interface{}) {
-	bot.handlers["\f"+endpoint] = handler
+func (bot *Bot) Action(endpoint interface{}, handler interface{}) {
+	switch end := endpoint.(type) {
+	case string:
+		bot.handlers["\f"+end] = handler
+	case *regexp.Regexp:
+		bot.handlers["\f"+end.String()] = handler
+	default:
+		panic("easytgbot: unsupported endpoint")
+	}
 }
 
 // ApplyHandlers is apply handler
-func (bot *Bot) ApplyHandlers(update *Update, extra interface{}) (JSONBody, error) {
+func (bot *Bot) ApplyHandlers(update *Update, context interface{}) (JSONBody, error) {
 	updateType := update.GetType()
 
 	// callback_query
@@ -364,7 +372,21 @@ func (bot *Bot) ApplyHandlers(update *Update, extra interface{}) (JSONBody, erro
 
 	// execute
 	if handler, ok := handler.(func(*Bot, *Update, interface{}) JSONBody); ok {
-		return handler(bot, update, extra), nil
+		return handler(bot, update, context), nil
 	}
+
+	// for handlers
+	for endpoint, handler := range bot.handlers {
+		// callback_query
+		if callbackQuery.Exists() {
+			data := callbackQuery.Get("data").String()
+			if regexp.MustCompile(endpoint).FindStringIndex(data) != nil {
+				if handler, ok := handler.(func(*Bot, *Update, interface{}) JSONBody); ok {
+					return handler(bot, update, context), nil
+				}
+			}
+		}
+	}
+
 	return JSONBody{}, fmt.Errorf("unsupported update type")
 }
