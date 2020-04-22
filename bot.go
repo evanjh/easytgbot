@@ -325,18 +325,26 @@ func (bot *Bot) SendMessage(chatID int64, text string, extra JSONBody) (Update, 
 
 // Handle lets you set the handler for some command name or
 // one of the supported endpoints.
-func (bot *Bot) Handle(endpoint interface{}, handler interface{}) {
-	switch end := endpoint.(type) {
-	case string:
-		bot.handlers[end] = handler
-	default:
-		panic("easytgbot: unsupported endpoint")
-	}
+func (bot *Bot) Handle(endpoint string, handler interface{}) {
+	bot.handlers[endpoint] = handler
+}
+
+// Action lets you set the handler for some command name or
+// one of the supported endpoints.
+func (bot *Bot) Action(endpoint string, handler interface{}) {
+	bot.handlers["\f"+endpoint] = handler
 }
 
 // ApplyHandlers is apply handler
 func (bot *Bot) ApplyHandlers(update *Update, extra interface{}) (JSONBody, error) {
 	updateType := update.GetType()
+
+	// callback_query
+	callbackQuery := update.Get("callback_query")
+	if callbackQuery.Exists() {
+		updateType = "\f" + callbackQuery.Get("data").String()
+	}
+
 	// command first
 	command, _ := update.Command()
 	if len(command) > 0 {
