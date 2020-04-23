@@ -203,6 +203,19 @@ func (update *Update) EditMessageText(text string, extra JSONBody) JSONBody {
 	}, extra)
 }
 
+// EditMessageReplyMarkup edit message
+func (update *Update) EditMessageReplyMarkup(extra JSONBody) JSONBody {
+	message, _ := update.Message()
+	messageID := message.Get("message_id").Int()
+	chat, _ := update.Chat()
+	chatID := chat.Get("id").Int()
+	return mergeJSON(JSONBody{
+		"method":     "editMessageReplyMarkup",
+		"chat_id":    chatID,
+		"message_id": messageID,
+	}, extra)
+}
+
 // mergeJSON merge json body
 func mergeJSON(map1 JSONBody, map2 JSONBody) JSONBody {
 	for k, v := range map2 {
