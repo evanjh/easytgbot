@@ -59,6 +59,8 @@ type Settings struct {
 
 	// Timeout
 	Timeout time.Duration // Default: 10s
+
+	Proxy string
 }
 
 // Update is a response from the Telegram API with the result stored raw.
@@ -129,6 +131,11 @@ func New(token string, opts Settings) (*Bot, error) {
 	}
 
 	client := req.New()
+	// set proxy
+	if opts.Proxy != "" {
+		client.SetProxyUrl(opts.Proxy)
+	}
+
 	bot := &Bot{
 		Debug:   opts.Debug == true,
 		Token:   token,
