@@ -216,14 +216,14 @@ func (update *Update) EditMessageReplyMarkup(extra JSONBody) JSONBody {
 	}, extra)
 }
 
-// AnswerCallbackQuery is AnswerCallbackQuery 
-func (update *Update) AnswerCallbackQuery(text string,extra JSONBody) JSONBody {
+// AnswerCallbackQuery is AnswerCallbackQuery
+func (update *Update) AnswerCallbackQuery(text string, extra JSONBody) JSONBody {
 	callbackQuery := update.Get("callback_query")
 	queryID := callbackQuery.Get("id").String()
 	return mergeJSON(JSONBody{
-		"method":          "answerCallbackQuery",
-		"callback_query_id":    queryID,
-		"text":           text,
+		"method":            "answerCallbackQuery",
+		"callback_query_id": queryID,
+		"text":              text,
 	}, extra)
 }
 
