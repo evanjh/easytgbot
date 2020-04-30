@@ -182,11 +182,12 @@ func (update *Update) Reply(text string, extra JSONBody) JSONBody {
 	chat, _ := update.Chat()
 	chatID := chat.Get("id").Int()
 	callbackQuery := update.Get("callback_query")
-	result := mergeJSON(JSONBody{
+
+	result := JSONBody{
 		"chat_id":             chatID,
 		"reply_to_message_id": messageID,
 		"text":                text,
-	}, extra)
+	}
 
 	// callback
 	if callbackQuery.Exists() {
@@ -196,6 +197,7 @@ func (update *Update) Reply(text string, extra JSONBody) JSONBody {
 		result["method"] = "sendMessage"
 		result["reply_to_message_id"] = messageID
 	}
+	result = mergeJSON(result, extra)
 	return result
 }
 
