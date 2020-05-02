@@ -190,6 +190,7 @@ func (update *Update) Reply(text string, extra JSONBody) JSONBody {
 
 	// callback
 	if _, ok := extra["force"]; ok {
+		delete(result, "force")
 		result["method"] = "sendMessage"
 		result["reply_to_message_id"] = messageID
 	} else {
