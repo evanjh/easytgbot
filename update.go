@@ -184,9 +184,8 @@ func (update *Update) Reply(text string, extra JSONBody) JSONBody {
 	callbackQuery := update.Get("callback_query")
 
 	result := JSONBody{
-		"chat_id":             chatID,
-		"reply_to_message_id": messageID,
-		"text":                text,
+		"chat_id": chatID,
+		"text":    text,
 	}
 
 	// callback
