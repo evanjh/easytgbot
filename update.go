@@ -189,13 +189,19 @@ func (update *Update) Reply(text string, extra JSONBody) JSONBody {
 	}
 
 	// callback
-	if callbackQuery.Exists() {
-		result["method"] = "editMessageText"
-		result["message_id"] = messageID
-	} else {
+	if _, ok := extra["force"]; ok {
 		result["method"] = "sendMessage"
 		result["reply_to_message_id"] = messageID
+	} else {
+		if callbackQuery.Exists() {
+			result["method"] = "editMessageText"
+			result["message_id"] = messageID
+		} else {
+			result["method"] = "sendMessage"
+			result["reply_to_message_id"] = messageID
+		}
 	}
+
 	result = mergeJSON(result, extra)
 	return result
 }
