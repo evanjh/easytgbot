@@ -331,6 +331,35 @@ func (bot *Bot) SendMessage(chatID int64, text string, extra JSONBody) (Update, 
 	}, extra))
 }
 
+// GetChat see https://core.telegram.org/bots/api#getchat
+func (bot *Bot) GetChat(chatID int64) (Update, error) {
+	return bot.MakeRequest("getChat", JSONBody{
+		"chat_id": chatID,
+	})
+}
+
+// GetChatMember see https://core.telegram.org/bots/api#getchatmember
+func (bot *Bot) GetChatMember(chatID int64, userID int64) (Update, error) {
+	return bot.MakeRequest("getChatMember", JSONBody{
+		"chat_id": chatID,
+		"user_id": userID,
+	})
+}
+
+// GetChatAdministrators see https://core.telegram.org/bots/api#getchatadministrators
+func (bot *Bot) GetChatAdministrators(chatID int64) (Update, error) {
+	return bot.MakeRequest("getChatAdministrators", JSONBody{
+		"chat_id": chatID,
+	})
+}
+
+// GetChatMembersCount see https://core.telegram.org/bots/api#getchatmemberscount
+func (bot *Bot) GetChatMembersCount(chatID int64) (Update, error) {
+	return bot.MakeRequest("getChatMembersCount", JSONBody{
+		"chat_id": chatID,
+	})
+}
+
 // Handle lets you set the handler for some command name or
 // one of the supported endpoints.
 func (bot *Bot) Handle(endpoint string, handler interface{}) {
