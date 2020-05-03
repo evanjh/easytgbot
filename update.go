@@ -175,6 +175,26 @@ func (update *Update) From() (Update, error) {
 	return Update{}, fmt.Errorf("from is not found")
 }
 
+// SendMessage is send message
+func (update *Update) SendMessage(text string, extra JSONBody) JSONBody {
+	chat, _ := update.Chat()
+	chatID := chat.Get("id").Int()
+
+	result := JSONBody{
+		"method":  "sendMessage",
+		"chat_id": chatID,
+		"text":    text,
+	}
+	// reply
+	if _, ok := extra["reply"]; ok {
+		message, _ := update.Message()
+		messageID := message.Get("message_id").Int()
+		result["reply_to_message_id"] = messageID
+	}
+	result = mergeJSON(result, extra)
+	return result
+}
+
 // Reply reply message
 func (update *Update) Reply(text string, extra JSONBody) JSONBody {
 	message, _ := update.Message()
@@ -189,20 +209,13 @@ func (update *Update) Reply(text string, extra JSONBody) JSONBody {
 	}
 
 	// callback
-	if _, ok := extra["force"]; ok {
-		delete(result, "force")
+	if callbackQuery.Exists() {
+		result["method"] = "editMessageText"
+		result["message_id"] = messageID
+	} else {
 		result["method"] = "sendMessage"
 		result["reply_to_message_id"] = messageID
-	} else {
-		if callbackQuery.Exists() {
-			result["method"] = "editMessageText"
-			result["message_id"] = messageID
-		} else {
-			result["method"] = "sendMessage"
-			result["reply_to_message_id"] = messageID
-		}
 	}
-
 	result = mergeJSON(result, extra)
 	return result
 }
