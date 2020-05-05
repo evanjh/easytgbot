@@ -360,6 +360,14 @@ func (bot *Bot) GetChatMembersCount(chatID int64) (Update, error) {
 	})
 }
 
+// DeleteMessage see https://core.telegram.org/bots/api#deletemessage
+func (bot *Bot) DeleteMessage(chatID int64, messageID int64) (Update, error) {
+	return bot.MakeRequest("deleteMessage", JSONBody{
+		"chat_id":    chatID,
+		"message_id": messageID,
+	})
+}
+
 // Handle lets you set the handler for some command name or
 // one of the supported endpoints.
 func (bot *Bot) Handle(endpoint string, handler interface{}) {

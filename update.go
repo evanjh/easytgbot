@@ -258,6 +258,19 @@ func (update *Update) AnswerCallbackQuery(text string, extra JSONBody) JSONBody 
 	}, extra)
 }
 
+// DeleteMessage see: https://core.telegram.org/bots/api#deletemessage
+func (update *Update) DeleteMessage() JSONBody {
+	message, _ := update.Message()
+	messageID := message.Get("message_id").Int()
+	chat, _ := update.Chat()
+	chatID := chat.Get("id").Int()
+	return JSONBody{
+		"method":     "deleteMessage",
+		"chat_id":    chatID,
+		"message_id": messageID,
+	}
+}
+
 // mergeJSON merge json body
 func mergeJSON(map1 JSONBody, map2 JSONBody) JSONBody {
 	for k, v := range map2 {
