@@ -379,7 +379,7 @@ func (bot *Bot) Handle(endpoint string, handler interface{}) {
 func (bot *Bot) Action(endpoint interface{}, handler interface{}) {
 	switch end := endpoint.(type) {
 	case string:
-		bot.handlers["\f"+end] = handler
+		bot.handlers["\f^"+end+"$"] = handler
 	case *regexp.Regexp:
 		bot.handlers["\f"+end.String()] = handler
 	default:
