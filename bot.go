@@ -399,7 +399,7 @@ func (bot *Bot) ApplyHandlers(update *Update, context interface{}) (JSONBody, er
 		// for handlers
 		for endpoint, handler := range bot.handlers {
 			// skip command
-			if endpoint[0:1] == "/" {
+			if endpoint[0:1] != "\f" {
 				continue
 			}
 			endpoint = endpoint[1:]
