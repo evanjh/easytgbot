@@ -398,6 +398,10 @@ func (bot *Bot) ApplyHandlers(update *Update, context interface{}) (JSONBody, er
 		updateType = "\f" + data
 		// for handlers
 		for endpoint, handler := range bot.handlers {
+			// skip command
+			if endpoint[0:1] == "/" {
+				continue
+			}
 			endpoint = endpoint[1:]
 			if regexp.MustCompile(endpoint).FindStringIndex(data) != nil {
 				if handler, ok := handler.(func(*Bot, *Update, interface{}) JSONBody); ok {
