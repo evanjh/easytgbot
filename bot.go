@@ -420,7 +420,11 @@ func (bot *Bot) ApplyHandlers(update *Update, context interface{}) (JSONBody, er
 				command = command[0:pos]
 			}
 		}
-		updateType = command
+
+		// found handler
+		if _, ok := bot.handlers[command]; ok {
+			updateType = command
+		}
 	}
 	// check handler has exists
 	handler, ok := bot.handlers[updateType]
