@@ -386,7 +386,7 @@ func (bot *Bot) UnbanChatMember(chatID int64, userID int64) (Update, error) {
 }
 
 // RestrictChatMember see https://core.telegram.org/bots/api#restrictchatmember
-func (bot *Bot) RestrictChatMember(chatID int64, userID int64, permissions []map[string]bool, untilDate int64) (Update, error) {
+func (bot *Bot) RestrictChatMember(chatID int64, userID int64, permissions map[string]bool, untilDate int64) (Update, error) {
 	return bot.MakeRequest("restrictChatMember", JSONBody{
 		"chat_id":     chatID,
 		"user_id":     userID,
