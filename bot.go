@@ -368,6 +368,33 @@ func (bot *Bot) DeleteMessage(chatID int64, messageID int64) (Update, error) {
 	})
 }
 
+// KickChatMember see https://core.telegram.org/bots/api#kickchatmember
+func (bot *Bot) KickChatMember(chatID int64, userID int64, untilDate int) (Update, error) {
+	return bot.MakeRequest("kickChatMember", JSONBody{
+		"chat_id":    chatID,
+		"user_id":    userID,
+		"until_date": untilDate,
+	})
+}
+
+// UnbanChatMember see https://core.telegram.org/bots/api#unbanchatmember
+func (bot *Bot) UnbanChatMember(chatID int64, userID int64) (Update, error) {
+	return bot.MakeRequest("unbanChatMember", JSONBody{
+		"chat_id": chatID,
+		"user_id": userID,
+	})
+}
+
+// RestrictChatMember see https://core.telegram.org/bots/api#restrictchatmember
+func (bot *Bot) RestrictChatMember(chatID int64, userID int64, permissions []map[string]bool, untilDate int) (Update, error) {
+	return bot.MakeRequest("restrictChatMember", JSONBody{
+		"chat_id":     chatID,
+		"user_id":     userID,
+		"permissions": permissions,
+		"until_date":  untilDate,
+	})
+}
+
 // Handle lets you set the handler for some command name or
 // one of the supported endpoints.
 func (bot *Bot) Handle(endpoint string, handler interface{}) {
