@@ -332,32 +332,53 @@ func (bot *Bot) SendMessage(chatID int64, text string, extra JSONBody) (Update, 
 }
 
 // GetChat see https://core.telegram.org/bots/api#getchat
-func (bot *Bot) GetChat(chatID int64) (Update, error) {
-	return bot.MakeRequest("getChat", JSONBody{
-		"chat_id": chatID,
-	})
+func (bot *Bot) GetChat(param interface{}) (Update, error) {
+	params := JSONBody{}
+	switch chatID := param.(type) {
+	case string:
+		params["chat_id"] = chatID
+	default:
+		params["chat_id"] = chatID.(int64)
+	}
+	return bot.MakeRequest("getChat", params)
 }
 
 // GetChatMember see https://core.telegram.org/bots/api#getchatmember
-func (bot *Bot) GetChatMember(chatID int64, userID int64) (Update, error) {
-	return bot.MakeRequest("getChatMember", JSONBody{
-		"chat_id": chatID,
+func (bot *Bot) GetChatMember(param interface{}, userID int64) (Update, error) {
+	params := JSONBody{
 		"user_id": userID,
-	})
+	}
+	switch chatID := param.(type) {
+	case string:
+		params["chat_id"] = chatID
+	default:
+		params["chat_id"] = chatID.(int64)
+	}
+	return bot.MakeRequest("getChatMember", params)
 }
 
 // GetChatAdministrators see https://core.telegram.org/bots/api#getchatadministrators
-func (bot *Bot) GetChatAdministrators(chatID int64) (Update, error) {
-	return bot.MakeRequest("getChatAdministrators", JSONBody{
-		"chat_id": chatID,
-	})
+func (bot *Bot) GetChatAdministrators(param interface{}) (Update, error) {
+	params := JSONBody{}
+	switch chatID := param.(type) {
+	case string:
+		params["chat_id"] = chatID
+	default:
+		params["chat_id"] = chatID.(int64)
+	}
+	return bot.MakeRequest("getChatAdministrators", params)
 }
 
 // GetChatMembersCount see https://core.telegram.org/bots/api#getchatmemberscount
-func (bot *Bot) GetChatMembersCount(chatID int64) (Update, error) {
-	return bot.MakeRequest("getChatMembersCount", JSONBody{
-		"chat_id": chatID,
-	})
+func (bot *Bot) GetChatMembersCount(param interface{}) (Update, error) {
+	params := JSONBody{}
+	switch chatID := param.(type) {
+	case string:
+		params["chat_id"] = chatID
+	default:
+		params["chat_id"] = chatID.(int64)
+	}
+	return bot.MakeRequest("getChatMembersCount", params)
 }
 
 // DeleteMessage see https://core.telegram.org/bots/api#deletemessage
