@@ -199,6 +199,8 @@ func (bot *Bot) MakeRequest(endpoint string, params JSONBody) (Update, error) {
 		resp, err = bot.client.Post(method, header, req.BodyJSON(&jsonBody))
 	}
 
+	defer resp.Response().Body.Close()
+
 	if err != nil {
 		return Update{}, err
 	}
