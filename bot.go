@@ -61,6 +61,8 @@ type Settings struct {
 	Timeout time.Duration // Default: 10s
 
 	Proxy string
+
+	GetMe bool
 }
 
 // Update is a response from the Telegram API with the result stored raw.
@@ -149,12 +151,14 @@ func New(token string, opts Settings) (*Bot, error) {
 		handlers:    make(map[string]interface{}),
 	}
 
-	self, err := bot.GetMe()
-	if err != nil {
-		return nil, err
-	}
+	if opts.GetMe {
+		self, err := bot.GetMe()
+		if err != nil {
+			return nil, err
+		}
 
-	bot.Self = self
+		bot.Self = self
+	}
 
 	return bot, nil
 }
