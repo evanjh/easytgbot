@@ -442,9 +442,6 @@ func (bot *Bot) Action(endpoint interface{}, handler interface{}) {
 // ApplyHandlers is apply handler
 func (bot *Bot) ApplyHandlers(update *Update, context interface{}) (JSONBody, error) {
 	updateType := update.GetType()
-
-	fmt.Printf("-------- bot.handlers: %v\n", len(bot.handlers))
-
 	// callback_query
 	callbackQuery := update.Get("callback_query")
 	if callbackQuery.Exists() {
