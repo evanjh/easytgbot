@@ -254,6 +254,7 @@ func (update *Update) AnswerCallbackQuery(text string, extra JSONBody) JSONBody 
 	return mergeJSON(JSONBody{
 		"method":            "answerCallbackQuery",
 		"callback_query_id": queryID,
+		"show_alert":        true,
 		"text":              text,
 	}, extra)
 }
