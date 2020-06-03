@@ -1,6 +1,7 @@
 package easytgbot
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/url"
@@ -24,6 +25,14 @@ const (
 
 // JSONBody is send message
 type JSONBody map[string]interface{}
+
+func (body JSONBody) Error() string {
+	data, err := json.Marshal(body)
+	if err != nil {
+		return err.Error()
+	}
+	return string(data)
+}
 
 // MiddlewareFunc defines a function to process middleware.
 type MiddlewareFunc func(HandlerFunc) HandlerFunc
