@@ -25,6 +25,12 @@ const (
 // JSONBody is send message
 type JSONBody map[string]interface{}
 
+// MiddlewareFunc defines a function to process middleware.
+type MiddlewareFunc func(HandlerFunc) HandlerFunc
+
+// HandlerFunc defines a function to serve HTTP requests.
+type HandlerFunc func(interface{}) error
+
 // Bot allows you to interact with the Telegram Bot API.
 type Bot struct {
 	Debug   bool
@@ -38,6 +44,7 @@ type Bot struct {
 	client          *req.Req
 	shutdownChannel chan interface{}
 	apiEndpoint     string
+	middleware      []MiddlewareFunc
 }
 
 // Settings represents a utility struct for passing certain
@@ -437,6 +444,11 @@ func (bot *Bot) Action(endpoint interface{}, handler interface{}) {
 	default:
 		panic("easytgbot: unsupported endpoint")
 	}
+}
+
+// Use
+func (bot *Bot) Use(middleware ...MiddlewareFunc) {
+	bot.middleware = append(bot.middleware, middleware...)
 }
 
 // ApplyHandlers is apply handler
