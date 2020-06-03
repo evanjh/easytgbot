@@ -440,7 +440,7 @@ func (bot *Bot) Action(endpoint interface{}, handler interface{}) {
 }
 
 // ApplyHandlers is apply handler
-func (bot *Bot) ApplyHandlers(update *Update, context interface{}) (JSONBody, error) {
+func (bot *Bot) ApplyHandlers(context interface{}, update *Update) (JSONBody, error) {
 	updateType := update.GetType()
 	// callback_query
 	callbackQuery := update.Get("callback_query")
@@ -455,8 +455,8 @@ func (bot *Bot) ApplyHandlers(update *Update, context interface{}) (JSONBody, er
 			}
 			endpoint = endpoint[1:]
 			if regexp.MustCompile(endpoint).FindStringIndex(data) != nil {
-				if handler, ok := handler.(func(*Bot, *Update, interface{}) JSONBody); ok {
-					return handler(bot, update, context), nil
+				if handler, ok := handler.(func(interface{}, *Bot, *Update) JSONBody); ok {
+					return handler(context, bot, update), nil
 				}
 			}
 		}
@@ -484,8 +484,8 @@ func (bot *Bot) ApplyHandlers(update *Update, context interface{}) (JSONBody, er
 	}
 
 	// execute
-	if handler, ok := handler.(func(*Bot, *Update, interface{}) JSONBody); ok {
-		return handler(bot, update, context), nil
+	if handler, ok := handler.(func(interface{}, *Bot, *Update) JSONBody); ok {
+		return handler(context, bot, update), nil
 	}
 
 	return JSONBody{}, fmt.Errorf("unsupported update type")
