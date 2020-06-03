@@ -29,7 +29,7 @@ type JSONBody map[string]interface{}
 type MiddlewareFunc func(HandlerFunc) HandlerFunc
 
 // HandlerFunc defines a function to serve HTTP requests.
-type HandlerFunc func(interface{}) error
+type HandlerFunc func(interface{}, *Bot, *Update) JSONBody
 
 // Bot allows you to interact with the Telegram Bot API.
 type Bot struct {
@@ -451,6 +451,14 @@ func (bot *Bot) Use(middleware ...MiddlewareFunc) {
 	bot.middleware = append(bot.middleware, middleware...)
 }
 
+// applyMiddleware
+func applyMiddleware(h HandlerFunc, middleware ...MiddlewareFunc) HandlerFunc {
+	for i := len(middleware) - 1; i >= 0; i-- {
+		h = middleware[i](h)
+	}
+	return h
+}
+
 // ApplyHandlers is apply handler
 func (bot *Bot) ApplyHandlers(context interface{}, update *Update) (JSONBody, error) {
 	updateType := update.GetType()
@@ -468,6 +476,9 @@ func (bot *Bot) ApplyHandlers(context interface{}, update *Update) (JSONBody, er
 			endpoint = endpoint[1:]
 			if regexp.MustCompile(endpoint).FindStringIndex(data) != nil {
 				if handler, ok := handler.(func(interface{}, *Bot, *Update) JSONBody); ok {
+					if len(bot.middleware) > 0 {
+						handler = applyMiddleware(handler, bot.middleware...)
+					}
 					return handler(context, bot, update), nil
 				}
 			}
@@ -497,6 +508,9 @@ func (bot *Bot) ApplyHandlers(context interface{}, update *Update) (JSONBody, er
 
 	// execute
 	if handler, ok := handler.(func(interface{}, *Bot, *Update) JSONBody); ok {
+		if len(bot.middleware) > 0 {
+			handler = applyMiddleware(handler, bot.middleware...)
+		}
 		return handler(context, bot, update), nil
 	}
 
