@@ -44,15 +44,11 @@ func (update *Update) GetType() string {
 		"connected_website",
 		"passport_data",
 		"poll",
-		"forward_date", // forward
 	}
 	message, err := update.Message()
 	if err == nil {
 		for _, key := range MessageSubTypes {
 			if message.Get(key).Exists() {
-				if key == "forward_date" {
-					return "forward"
-				}
 				return key
 			}
 		}
