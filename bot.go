@@ -351,6 +351,15 @@ func (bot *Bot) SendMessage(chatID int64, text string, extra JSONBody) (Update, 
 	}, extra))
 }
 
+// AnswerCallbackQuery see https://core.telegram.org/bots/api#answercallbackquery
+func (bot *Bot) AnswerCallbackQuery(queryID string, text string, extra JSONBody) (Update, error) {
+	return bot.MakeRequest("answerCallbackQuery", mergeJSON(JSONBody{
+		"callback_query_id": queryID,
+		"text":              text,
+		"show_alert":        true,
+	}, extra))
+}
+
 // GetChat see https://core.telegram.org/bots/api#getchat
 func (bot *Bot) GetChat(param interface{}) (Update, error) {
 	params := JSONBody{}
