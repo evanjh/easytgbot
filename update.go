@@ -268,6 +268,26 @@ func (update *Update) DeleteMessage() JSONBody {
 	}
 }
 
+// SendMediaGroup is send media group
+func (update *Update) SendMediaGroup(media []JSONBody, extra JSONBody) JSONBody {
+	chat, _ := update.Chat()
+	chatID := chat.Get("id").Int()
+
+	result := JSONBody{
+		"method":  "sendMediaGroup",
+		"chat_id": chatID,
+		"media":   media,
+	}
+	// reply
+	if _, ok := extra["reply"]; ok {
+		message, _ := update.Message()
+		messageID := message.Get("message_id").Int()
+		result["reply_to_message_id"] = messageID
+	}
+	result = mergeJSON(result, extra)
+	return result
+}
+
 // mergeJSON merge json body
 func mergeJSON(map1 JSONBody, map2 JSONBody) JSONBody {
 	for k, v := range map2 {
