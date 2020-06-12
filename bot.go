@@ -360,6 +360,14 @@ func (bot *Bot) AnswerCallbackQuery(queryID string, text string, extra JSONBody)
 	}, extra))
 }
 
+// SendMediaGroup see https://core.telegram.org/bots/api#sendmediagroup
+func (bot *Bot) SendMediaGroup(chatID int64, media []JSONBody, extra JSONBody) (Update, error) {
+	return bot.MakeRequest("sendMediaGroup", mergeJSON(JSONBody{
+		"chat_id": chatID,
+		"media":   media,
+	}, extra))
+}
+
 // GetChat see https://core.telegram.org/bots/api#getchat
 func (bot *Bot) GetChat(param interface{}) (Update, error) {
 	params := JSONBody{}
