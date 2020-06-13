@@ -372,7 +372,9 @@ func (bot *Bot) SendMediaGroup(chatID int64, media []JSONBody, extra JSONBody) (
 
 // GetFile see https://core.telegram.org/bots/api#getfile
 func (bot *Bot) GetFile(fileID string) (string, error) {
-	res, err := bot.MakeRequest("getFile", nil)
+	res, err := bot.MakeRequest("getFile", JSONBody{
+		"file_id": fileID,
+	})
 	if err != nil {
 		return "", err
 	}
