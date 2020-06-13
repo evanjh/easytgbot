@@ -21,6 +21,8 @@ const (
 	// Endpoint is the endpoint for all API methods,
 	// with formatting for Sprintf.
 	Endpoint = "https://api.telegram.org/bot%s/%s"
+	// FileEndpoint
+	FileEndpoint = "https://api.telegram.org/file/bot%s/%s"
 )
 
 // JSONBody is send message
@@ -366,6 +368,15 @@ func (bot *Bot) SendMediaGroup(chatID int64, media []JSONBody, extra JSONBody) (
 		"chat_id": chatID,
 		"media":   media,
 	}, extra))
+}
+
+// GetFile see https://core.telegram.org/bots/api#getfile
+func (bot *Bot) GetFile(fileID string) (string, error) {
+	res, err := bot.MakeRequest("getFile", nil)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(FileEndpoint, bot.Token, res.Get("file_path").String()), nil
 }
 
 // GetChat see https://core.telegram.org/bots/api#getchat
