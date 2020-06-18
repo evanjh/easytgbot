@@ -420,7 +420,7 @@ func (bot *Bot) GetChatAdministrators(param interface{}) (Update, error) {
 }
 
 // GetChatMembersCount see https://core.telegram.org/bots/api#getchatmemberscount
-func (bot *Bot) GetChatMembersCount(param interface{}) (Update, error) {
+func (bot *Bot) GetChatMembersCount(param interface{}, extra JSONBody) (Update, error) {
 	params := JSONBody{}
 	switch chatID := param.(type) {
 	case string:
@@ -428,7 +428,8 @@ func (bot *Bot) GetChatMembersCount(param interface{}) (Update, error) {
 	default:
 		params["chat_id"] = chatID.(int64)
 	}
-	return bot.MakeRequest("getChatMembersCount", params)
+
+	return bot.MakeRequest("getChatMembersCount", mergeJSON(params, extra))
 }
 
 // DeleteMessage see https://core.telegram.org/bots/api#deletemessage
