@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/tidwall/gjson"
 )
@@ -61,23 +62,38 @@ func (update *Update) GetType() string {
 func (update *Update) Command() (string, string) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println(err)
+			log.Printf("bot command: %s\n", err)
 		}
 	}()
+	message, err := update.Message()
+	if err != nil {
+		return "", ""
+	}
+	text := message.Get("text").String()
+
+	var res []string
+	bText := []byte(text)
+	for len(bText) > 0 {
+		r, size := utf8.DecodeRune(bText)
+		if size == 4 {
+			res = append(res, fmt.Sprintf("%c", r))
+			res = append(res, "")
+		} else {
+			res = append(res, fmt.Sprintf("%c", r))
+		}
+		bText = bText[size:]
+	}
+
 	entities := update.Entities()
 	for _, entity := range entities {
 		etype := entity.Get("type").String()
 		switch etype {
 		case "bot_command":
-			message, err := update.Message()
-			if err == nil {
-				text := message.Get("text").String()
-				offset := entity.Get("offset").Int()
-				length := offset + entity.Get("length").Int()
-				command := text[offset:length]
-				payload := strings.TrimSpace(text[length:])
-				return command, payload
-			}
+			offset := entity.Get("offset").Int()
+			length := offset + entity.Get("length").Int()
+			command := text[offset:length]
+			payload := strings.TrimSpace(text[length:])
+			return command, payload
 		}
 	}
 	return "", ""
