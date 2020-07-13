@@ -2,11 +2,10 @@ package easytgbot
 
 import (
 	"fmt"
+	"github.com/tidwall/gjson"
 	"log"
 	"strings"
 	"unicode/utf8"
-
-	"github.com/tidwall/gjson"
 )
 
 // NewUpdate is create update instance
@@ -91,8 +90,8 @@ func (update *Update) Command() (string, string) {
 		case "bot_command":
 			offset := entity.Get("offset").Int()
 			length := offset + entity.Get("length").Int()
-			command := text[offset:length]
-			payload := strings.TrimSpace(text[length:])
+			command := strings.Join(res[offset:length], "")
+			payload := strings.TrimSpace(strings.Join(res[length:], ""))
 			return command, payload
 		}
 	}
