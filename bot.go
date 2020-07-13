@@ -45,6 +45,8 @@ type HandlerFunc func(interface{}, *Bot, *Update) JSONBody
 // Bot allows you to interact with the Telegram Bot API.
 type Bot struct {
 	Debug   bool
+	BotID   int64
+	BotName string
 	Token   string
 	Webhook string
 	Buffer  int
@@ -254,6 +256,16 @@ func (bot *Bot) MakeRequest(endpoint string, params JSONBody) (Update, error) {
 // another request.
 func (bot *Bot) GetMe() (Update, error) {
 	return bot.MakeRequest("getMe", nil)
+}
+
+// SetBotID
+func (bot *Bot) SetBotID(botID int64) {
+	bot.BotID = botID
+}
+
+// SetBotID
+func (bot *Bot) SetBotName(name string) {
+	bot.BotName = name
 }
 
 // GetUpdates starts and returns a channel for getting updates.
@@ -529,7 +541,7 @@ func (bot *Bot) ApplyHandlers(context interface{}, update *Update) (JSONBody, er
 	if len(command) > 0 {
 		if pos := strings.Index(command, "@"); pos > -1 {
 			botName := command[pos+1:]
-			if botName == bot.Self.Get("username").String() {
+			if strings.ToLower(botName) == strings.ToLower(bot.BotName) {
 				command = command[0:pos]
 			}
 		}
