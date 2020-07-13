@@ -2,6 +2,7 @@ package easytgbot
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/tidwall/gjson"
@@ -58,6 +59,11 @@ func (update *Update) GetType() string {
 
 // Command get command
 func (update *Update) Command() (string, string) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println(err)
+		}
+	}()
 	entities := update.Entities()
 	for _, entity := range entities {
 		etype := entity.Get("type").String()
