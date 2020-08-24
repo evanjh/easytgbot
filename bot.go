@@ -365,6 +365,31 @@ func (bot *Bot) SendMessage(chatID int64, text string, extra JSONBody) (Update, 
 	}, extra))
 }
 
+// SendPhoto send message
+func (bot *Bot) SendPhoto(chatID int64, fileID string, extra JSONBody) (Update, error) {
+	return bot.MakeRequest("sendPhoto", mergeJSON(JSONBody{
+		"chat_id": chatID,
+		"photo":   fileID,
+	}, extra))
+}
+
+// SendVideo send message
+func (bot *Bot) SendVideo(chatID int64, fileID string, extra JSONBody) (Update, error) {
+	return bot.MakeRequest("sendVideo", mergeJSON(JSONBody{
+		"chat_id": chatID,
+		"video":   fileID,
+	}, extra))
+}
+
+// ForwardMessage send message
+func (bot *Bot) ForwardMessage(chatID int64, fromChatID int64, messageID int64, extra JSONBody) (Update, error) {
+	return bot.MakeRequest("forwardMessage", mergeJSON(JSONBody{
+		"chat_id":      chatID,
+		"from_chat_id": fromChatID,
+		"message_id":   messageID,
+	}, extra))
+}
+
 // AnswerCallbackQuery see https://core.telegram.org/bots/api#answercallbackquery
 func (bot *Bot) AnswerCallbackQuery(queryID string, text string, extra JSONBody) (Update, error) {
 	return bot.MakeRequest("answerCallbackQuery", mergeJSON(JSONBody{
