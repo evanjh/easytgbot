@@ -503,6 +503,13 @@ func (bot *Bot) RestrictChatMember(chatID int64, userID int64, permissions map[s
 	})
 }
 
+// ExportChatInviteLink see https://core.telegram.org/bots/api#exportchatinvitelink
+func (bot *Bot) ExportChatInviteLink(chatID int64) (Update, error) {
+	return bot.MakeRequest("exportChatInviteLink", JSONBody{
+		"chat_id": chatID,
+	})
+}
+
 // Handle lets you set the handler for some command name or
 // one of the supported endpoints.
 func (bot *Bot) Handle(endpoint string, handler interface{}) {
