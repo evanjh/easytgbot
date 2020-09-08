@@ -573,7 +573,9 @@ func (bot *Bot) ApplyHandlers(context interface{}, update *Update) (JSONBody, er
 	if len(command) > 0 {
 		if pos := strings.Index(command, "@"); pos > -1 {
 			botName := command[pos+1:]
-			if strings.ToLower(botName) == strings.ToLower(bot.Name) {
+			if bot.Name != "" && strings.ToLower(botName) == strings.ToLower(bot.Name) {
+				command = command[0:pos]
+			} else if bot.Name == "" {
 				command = command[0:pos]
 			}
 		}
