@@ -571,11 +571,14 @@ func (bot *Bot) ApplyHandlers(context interface{}, update *Update) (JSONBody, er
 	// command first
 	command, _ := update.Command()
 	if len(command) > 0 {
+		fmt.Printf("---------------- command: %v\n", command)
 		if pos := strings.Index(command, "@"); pos > -1 {
 			botName := command[pos+1:]
+			fmt.Printf("---------------- botName: %v\n", botName)
 			if strings.ToLower(botName) == strings.ToLower(bot.Name) {
 				command = command[0:pos]
 			}
+			fmt.Printf("---------------- command1: %v\n", command)
 		}
 
 		// found handler
