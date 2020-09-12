@@ -365,6 +365,15 @@ func (bot *Bot) SendMessage(chatID int64, text string, extra JSONBody) (Update, 
 	}, extra))
 }
 
+// EditMessageText see https://core.telegram.org/bots/api#editmessagetext
+func (bot *Bot) EditMessageText(chatID int64, messageID int64, text string, extra JSONBody) (Update, error) {
+	return bot.MakeRequest("editMessageText", mergeJSON(JSONBody{
+		"chat_id":    chatID,
+		"message_id": messageID,
+		"text":       text,
+	}, extra))
+}
+
 // PinChatMessage see https://core.telegram.org/bots/api#pinchatmessage
 func (bot *Bot) PinChatMessage(chatID int64, messageID int64, extra JSONBody) (Update, error) {
 	return bot.MakeRequest("pinChatMessage", mergeJSON(JSONBody{
