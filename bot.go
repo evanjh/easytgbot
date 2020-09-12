@@ -365,6 +365,14 @@ func (bot *Bot) SendMessage(chatID int64, text string, extra JSONBody) (Update, 
 	}, extra))
 }
 
+// PinChatMessage see https://core.telegram.org/bots/api#pinchatmessage
+func (bot *Bot) PinChatMessage(chatID int64, messageID int64, extra JSONBody) (Update, error) {
+	return bot.MakeRequest("pinChatMessage", mergeJSON(JSONBody{
+		"chat_id":    chatID,
+		"message_id": messageID,
+	}, extra))
+}
+
 // SendPhoto send message
 func (bot *Bot) SendPhoto(chatID int64, fileID string, extra JSONBody) (Update, error) {
 	return bot.MakeRequest("sendPhoto", mergeJSON(JSONBody{
