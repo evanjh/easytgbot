@@ -382,9 +382,9 @@ func (bot *Bot) PinChatMessage(chatID int64, messageID int64, extra JSONBody) (U
 	}, extra))
 }
 
-// UnpinChatMessage see https://core.telegram.org/bots/api#unpinchatmessage
-func (bot *Bot) UnpinChatMessage(chatID int64) (Update, error) {
-	return bot.MakeRequest("unpinChatMessage", mergeJSON(JSONBody{
+// UnpinAllChatMessages see https://core.telegram.org/bots/api#unpinallchatmessages
+func (bot *Bot) UnpinAllChatMessages(chatID int64) (Update, error) {
+	return bot.MakeRequest("unpinAllChatMessages", mergeJSON(JSONBody{
 		"chat_id": chatID,
 	}, nil))
 }
