@@ -227,8 +227,6 @@ func (bot *Bot) MakeRequest(endpoint string, params JSONBody) (Update, error) {
 		return Update{}, err
 	}
 	if bot.Debug {
-		log.Printf("method: %s, resp: %+v", method, resp)
-	} else {
 		log.Printf("method: %s, resp: %-v", method, resp)
 	}
 	data, _ := resp.ToString()
