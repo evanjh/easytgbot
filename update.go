@@ -89,10 +89,12 @@ func (update *Update) Command() (string, string) {
 		switch etype {
 		case "bot_command":
 			offset := entity.Get("offset").Int()
-			length := offset + entity.Get("length").Int()
-			command := strings.Join(res[offset:length], "")
-			payload := strings.TrimSpace(strings.Join(res[length:], ""))
-			return command, payload
+			if offset == 0 {
+				length := offset + entity.Get("length").Int()
+				command := strings.Join(res[offset:length], "")
+				payload := strings.TrimSpace(strings.Join(res[length:], ""))
+				return command, payload
+			}
 		}
 	}
 	return "", ""
