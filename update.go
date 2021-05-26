@@ -2,10 +2,11 @@ package easytgbot
 
 import (
 	"fmt"
-	"github.com/tidwall/gjson"
 	"log"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/tidwall/gjson"
 )
 
 // NewUpdate is create update instance
@@ -14,7 +15,7 @@ func NewUpdate(data string) Update {
 }
 
 // GetType get message type
-func (update *Update) GetType() string {
+func (update Update) GetType() string {
 	MessageSubTypes := []string{
 		"voice",
 		"video_note",
@@ -58,7 +59,7 @@ func (update *Update) GetType() string {
 }
 
 // Command get command
-func (update *Update) Command() (string, string) {
+func (update Update) Command() (string, string) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Printf("bot command: %s\n", err)
@@ -101,7 +102,7 @@ func (update *Update) Command() (string, string) {
 }
 
 // Entities is Entities
-func (update *Update) Entities() []Update {
+func (update Update) Entities() []Update {
 	message, err := update.Message()
 	if err == nil {
 		if message.Get("entities").Exists() {
@@ -117,7 +118,7 @@ func (update *Update) Entities() []Update {
 }
 
 // Message get message
-func (update *Update) Message() (Update, error) {
+func (update Update) Message() (Update, error) {
 	message := update.Get("message")
 	if message.Exists() {
 		return message, nil
@@ -150,7 +151,7 @@ func (update *Update) Message() (Update, error) {
 }
 
 // Chat get update
-func (update *Update) Chat() (Update, error) {
+func (update Update) Chat() (Update, error) {
 	message, err := update.Message()
 	if err != nil {
 		return Update{}, fmt.Errorf("chat is not found")
@@ -159,7 +160,7 @@ func (update *Update) Chat() (Update, error) {
 }
 
 // From get update
-func (update *Update) From() (Update, error) {
+func (update Update) From() (Update, error) {
 
 	callbackQuery := update.Get("callback_query")
 	if callbackQuery.Exists() {
@@ -195,7 +196,7 @@ func (update *Update) From() (Update, error) {
 }
 
 // SendMessage is send message
-func (update *Update) SendMessage(text string, extra JSONBody) JSONBody {
+func (update Update) SendMessage(text string, extra JSONBody) JSONBody {
 	chat, _ := update.Chat()
 	chatID := chat.Get("id").Int()
 
@@ -215,7 +216,7 @@ func (update *Update) SendMessage(text string, extra JSONBody) JSONBody {
 }
 
 // Reply reply message
-func (update *Update) Reply(text string, extra JSONBody) JSONBody {
+func (update Update) Reply(text string, extra JSONBody) JSONBody {
 	message, _ := update.Message()
 	messageID := message.Get("message_id").Int()
 	chat, _ := update.Chat()
@@ -240,7 +241,7 @@ func (update *Update) Reply(text string, extra JSONBody) JSONBody {
 }
 
 // EditMessageText edit message
-func (update *Update) EditMessageText(text string, extra JSONBody) JSONBody {
+func (update Update) EditMessageText(text string, extra JSONBody) JSONBody {
 	message, _ := update.Message()
 	messageID := message.Get("message_id").Int()
 	chat, _ := update.Chat()
@@ -254,7 +255,7 @@ func (update *Update) EditMessageText(text string, extra JSONBody) JSONBody {
 }
 
 // EditMessageReplyMarkup edit message
-func (update *Update) EditMessageReplyMarkup(extra JSONBody) JSONBody {
+func (update Update) EditMessageReplyMarkup(extra JSONBody) JSONBody {
 	message, _ := update.Message()
 	messageID := message.Get("message_id").Int()
 	chat, _ := update.Chat()
@@ -267,7 +268,7 @@ func (update *Update) EditMessageReplyMarkup(extra JSONBody) JSONBody {
 }
 
 // AnswerCallbackQuery is AnswerCallbackQuery
-func (update *Update) AnswerCallbackQuery(text string, extra JSONBody) JSONBody {
+func (update Update) AnswerCallbackQuery(text string, extra JSONBody) JSONBody {
 	callbackQuery := update.Get("callback_query")
 	queryID := callbackQuery.Get("id").String()
 	return mergeJSON(JSONBody{
@@ -279,7 +280,7 @@ func (update *Update) AnswerCallbackQuery(text string, extra JSONBody) JSONBody 
 }
 
 // DeleteMessage see: https://core.telegram.org/bots/api#deletemessage
-func (update *Update) DeleteMessage() JSONBody {
+func (update Update) DeleteMessage() JSONBody {
 	message, _ := update.Message()
 	messageID := message.Get("message_id").Int()
 	chat, _ := update.Chat()
@@ -292,7 +293,7 @@ func (update *Update) DeleteMessage() JSONBody {
 }
 
 // SendMediaGroup is send media group
-func (update *Update) SendMediaGroup(media []JSONBody, extra JSONBody) JSONBody {
+func (update Update) SendMediaGroup(media []JSONBody, extra JSONBody) JSONBody {
 	chat, _ := update.Chat()
 	chatID := chat.Get("id").Int()
 
