@@ -565,7 +565,7 @@ func applyMiddleware(h HandlerFunc, middleware ...MiddlewareFunc) HandlerFunc {
 }
 
 // ApplyHandlers is apply handler
-func (bot *Bot) ApplyHandlers(context interface{}, update *Update) (JSONBody, error) {
+func (bot *Bot) ApplyHandlers(context interface{}, update Update) (JSONBody, error) {
 	updateType := update.GetType()
 	// callback_query
 	callbackQuery := update.Get("callback_query")
@@ -580,7 +580,7 @@ func (bot *Bot) ApplyHandlers(context interface{}, update *Update) (JSONBody, er
 			}
 			endpoint = endpoint[1:]
 			if regexp.MustCompile(endpoint).FindStringIndex(data) != nil {
-				if handler, ok := handler.(func(interface{}, *Bot, *Update) JSONBody); ok {
+				if handler, ok := handler.(func(interface{}, *Bot, Update) JSONBody); ok {
 					if len(bot.middleware) > 0 {
 						handler = applyMiddleware(handler, bot.middleware...)
 					}
@@ -614,7 +614,7 @@ func (bot *Bot) ApplyHandlers(context interface{}, update *Update) (JSONBody, er
 	}
 
 	// execute
-	if handler, ok := handler.(func(interface{}, *Bot, *Update) JSONBody); ok {
+	if handler, ok := handler.(func(interface{}, *Bot, Update) JSONBody); ok {
 		if len(bot.middleware) > 0 {
 			handler = applyMiddleware(handler, bot.middleware...)
 		}
