@@ -9,8 +9,8 @@ import (
 )
 
 // NewUpdate is create update instance
-func NewUpdate(data string) *Update {
-	return &Update{gjson.Parse(data)}
+func NewUpdate(data string) Update {
+	return Update{gjson.Parse(data)}
 }
 
 // GetType get message type
