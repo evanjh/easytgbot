@@ -40,7 +40,7 @@ func (body JSONBody) Error() string {
 type MiddlewareFunc func(HandlerFunc) HandlerFunc
 
 // HandlerFunc defines a function to serve HTTP requests.
-type HandlerFunc func(interface{}, *Bot, *Update) JSONBody
+type HandlerFunc func(interface{}, *Bot, Update) JSONBody
 
 // Bot allows you to interact with the Telegram Bot API.
 type Bot struct {
