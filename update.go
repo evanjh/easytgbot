@@ -31,6 +31,7 @@ func (update Update) GetType() string {
 		"new_chat_title",
 		"new_chat_photo",
 		"new_chat_members",
+		"new_chat_member",
 		"migrate_to_chat_id",
 		"migrate_from_chat_id",
 		"location",
@@ -120,6 +121,16 @@ func (update Update) Entities() []Update {
 // Message get message
 func (update Update) Message() (Update, error) {
 	message := update.Get("message")
+	if message.Exists() {
+		return message, nil
+	}
+	
+	message := update.Get("my_chat_member")
+	if message.Exists() {
+		return message, nil
+	}
+	
+	message := update.Get("chat_member")
 	if message.Exists() {
 		return message, nil
 	}
