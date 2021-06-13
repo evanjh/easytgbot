@@ -9,6 +9,12 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+// MessageNodes is message node name
+var MessageNodes = []string{"message", "edited_message", "channel_post", "edited_channel_post", "my_chat_member", "chat_member"}
+
+// MessageQueryNodes is message query node name
+var MessageQueryNodes = []string{"callback_query", "inline_query", "shipping_query", "pre_checkout_query", "chosen_inline_result"}
+
 // NewUpdate is create update instance
 func NewUpdate(data string) Update {
 	return Update{gjson.Parse(data)}
@@ -30,8 +36,9 @@ func (update Update) GetType() string {
 		"photo",
 		"new_chat_title",
 		"new_chat_photo",
+		"my_chat_member",
+		"chat_member",
 		"new_chat_members",
-		"new_chat_member",
 		"migrate_to_chat_id",
 		"migrate_from_chat_id",
 		"location",
@@ -54,6 +61,11 @@ func (update Update) GetType() string {
 			if message.Get(key).Exists() {
 				return key
 			}
+		}
+	}
+	for _, key := range MessageSubTypes {
+		if update.Get(key).Exists() {
+			return key
 		}
 	}
 	return "unknown"
@@ -120,45 +132,26 @@ func (update Update) Entities() []Update {
 
 // Message get message
 func (update Update) Message() (Update, error) {
-	message := update.Get("message")
-	if message.Exists() {
-		return message, nil
-	}
-	
-	myChatMember := update.Get("my_chat_member")
-	if myChatMember.Exists() {
-		return myChatMember, nil
-	}
-	
-	chatMember := update.Get("chat_member")
-	if chatMember.Exists() {
-		return chatMember, nil
-	}
-
-	editedMessage := update.Get("edited_message")
-	if editedMessage.Exists() {
-		return editedMessage, nil
-	}
-
-	channelPost := update.Get("channel_post")
-	if channelPost.Exists() {
-		return channelPost, nil
-	}
-
-	editedChannelPost := update.Get("edited_channel_post")
-	if editedChannelPost.Exists() {
-		return editedChannelPost, nil
-	}
-
-	callbackQuery := update.Get("callback_query")
-	if callbackQuery.Exists() {
-		message := callbackQuery.Get("message")
+	for _, t := range MessageNodes {
+		message := update.Get(t)
 		if message.Exists() {
 			return message, nil
 		}
 	}
 
-	return Update{}, fmt.Errorf("chat is not found")
+	for _, q := range MessageQueryNodes {
+		callbackQuery := update.Get(q)
+		if callbackQuery.Exists() {
+			for _, t := range MessageNodes {
+				message := callbackQuery.Get(t)
+				if message.Exists() {
+					return message, nil
+				}
+			}
+		}
+	}
+
+	return Update{}, fmt.Errorf("message is not found")
 }
 
 // Chat get update
@@ -173,29 +166,11 @@ func (update Update) Chat() (Update, error) {
 // From get update
 func (update Update) From() (Update, error) {
 
-	callbackQuery := update.Get("callback_query")
-	if callbackQuery.Exists() {
-		return callbackQuery.Get("from"), nil
-	}
-
-	inlineQuery := update.Get("inline_query")
-	if inlineQuery.Exists() {
-		return inlineQuery.Get("from"), nil
-	}
-
-	shippingQuery := update.Get("shipping_query")
-	if shippingQuery.Exists() {
-		return shippingQuery.Get("from"), nil
-	}
-
-	preCheckoutQuery := update.Get("pre_checkout_query")
-	if preCheckoutQuery.Exists() {
-		return preCheckoutQuery.Get("from"), nil
-	}
-
-	chosenInlineResult := update.Get("chosen_inline_result")
-	if chosenInlineResult.Exists() {
-		return chosenInlineResult.Get("from"), nil
+	for _, t := range MessageQueryNodes {
+		callbackQuery := update.Get(t)
+		if callbackQuery.Exists() {
+			return callbackQuery.Get("from"), nil
+		}
 	}
 
 	message, err := update.Message()
