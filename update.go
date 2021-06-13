@@ -125,14 +125,14 @@ func (update Update) Message() (Update, error) {
 		return message, nil
 	}
 	
-	message := update.Get("my_chat_member")
-	if message.Exists() {
-		return message, nil
+	myChatMember := update.Get("my_chat_member")
+	if myChatMember.Exists() {
+		return myChatMember, nil
 	}
 	
-	message := update.Get("chat_member")
-	if message.Exists() {
-		return message, nil
+	chatMember := update.Get("chat_member")
+	if chatMember.Exists() {
+		return chatMember, nil
 	}
 
 	editedMessage := update.Get("edited_message")
