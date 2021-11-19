@@ -339,14 +339,6 @@ func (bot *Bot) GetWebhookInfo() (Update, error) {
 // If you do not have a legitimate TLS certificate, you need to include
 // your self signed certificate with the config.
 func (bot *Bot) SetWebhook(params JSONBody) (Update, error) {
-	info, err := bot.GetWebhookInfo()
-	if err != nil {
-		return Update{}, err
-	}
-	url := info.Get("url").String()
-	if url == params["url"] {
-		return Update{}, err
-	}
 	return bot.MakeRequest("setWebhook", params)
 }
 
